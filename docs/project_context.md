@@ -1,5 +1,4 @@
 # EVENT DATA COLLECTION SYSTEM - PROJECT CONTEXT
-*Last Updated: $(date +%Y-%m-%d)*
 
 ## 🏗️ CURRENT INFRASTRUCTURE
 **GitHub Repository:** https://github.com/Pintarweb/event-data-system
