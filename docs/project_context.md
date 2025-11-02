@@ -38,6 +38,7 @@
 -- visitors (id, name, phone, email, pass_url, total_points, created_at)
 -- visits (id, vendor_id, visitor_id, scan_timestamp, points_awarded)
 -- whatsapp_sessions (id, visitor_phone, session_initiated, initiated_at)
+```
 
 ## 🗓️ DEVELOPMENT STATUS
 **Day 2 Complete:** All 3 core webhooks built and tested
