@@ -60,7 +60,7 @@
                     const result = await response.json();
                     // Redirect to pass page (we'll create this next)
                     if (result.visitor_id) {
-                        window.location.href = `pass.html?visitor_id=${result.visitor_id}`;
+                        window.location.href = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
                     } else {
                         alert('Registration successful! Pass page coming soon.');
                     }

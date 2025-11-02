@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Event Pass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            text-align: center; 
+            background: #f5f5f5;
+        }
+        .pass-card { 
+            background: white;
+            border: 3px solid #25D366; 
+            border-radius: 20px; 
+            padding: 25px; 
+            margin: 20px 0; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .points { 
+            font-size: 32px; 
+            color: #25D366; 
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        button { 
+            background: #25D366; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            margin: 10px; 
+            cursor: pointer;
+            width: 80%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #1da851;
+        }
+        .scan-btn { background: #0080FF; }
+        .scan-btn:hover { background: #0066cc; }
+        .whatsapp-btn { background: #25D366; }
+        .stop-btn { background: #FF4444; }
+        .stop-btn:hover { background: #cc0000; }
+        #qr-reader { 
+            width: 100%; 
+            margin: 20px 0; 
+            border: 2px solid #0080FF;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .hidden { display: none; }
+        .visitor-info { 
+            font-size: 18px; 
+            color: #333;
+            margin: 10px 0;
+        }
+        .success-message {
+            color: #25D366;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎫 Your Event Pass</h1>
+    
+    <div class="pass-card">
+        <h2 id="visitorName">Welcome to the Event!</h2>
+        <div class="visitor-info">Visitor ID: <span id="visitorIdDisplay">---</span></div>
+        <div class="points" id="pointsDisplay">0 points</div>
+        <p>Scan booth QR codes to earn points and win prizes! 🏆</p>
+    </div>
+
+    <button class="scan-btn" onclick="startScan()">📸 Scan Booth QR Code</button>
+    <br>
+    <button class="whatsapp-btn" onclick="openWhatsApp()">💬 Confirm on WhatsApp</button>
+
+    <div id="qr-reader" class="hidden"></div>
+    <button id="stop-btn" class="stop-btn hidden" onclick="stopScan()">❌ Stop Camera</button>
+
+    <div id="scan-result" class="hidden success-message"></div>
+
+    <script>
+        // Get visitor_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const visitorId = urlParams.get('visitor_id') || 'unknown';
+        let html5QrcodeScanner;
+
+        // Display visitor ID
+        document.getElementById('visitorIdDisplay').textContent = visitorId;
+
+        function startScan() {
+            // Hide buttons, show scanner
+            document.getElementById('qr-reader').classList.remove('hidden');
+            document.getElementById('stop-btn').classList.remove('hidden');
+            document.querySelector('.scan-btn').style.display = 'none';
+            
+            // Initialize QR scanner
+            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
+                fps: 10, 
+                qrbox: 250,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
+            });
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop scanner
+            stopScan();
+            
+            // Show success message
+            document.getElementById('scan-result').textContent = '✅ Scan successful! Redirecting...';
+            document.getElementById('scan-result').classList.remove('hidden');
+            
+            // Add visitor_id to the scanned QR URL and redirect
+            try {
+                const url = new URL(decodedText);
+                url.searchParams.set('visitor_id', visitorId);
+                setTimeout(() => {
+                    window.location.href = url.toString();
+                }, 1000);
+            } catch (error) {
+                // If it's not a valid URL, just use it as-is
+                setTimeout(() => {
+                    window.location.href = decodedText + '?visitor_id=' + visitorId;
+                }, 1000);
+            }
+        }
+
+        function onScanFailure(error) {
+            // Silent failure - scanner continues
+        }
+
+        function stopScan() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            document.getElementById('qr-reader').classList.add('hidden');
+            document.getElementById('stop-btn').classList.add('hidden');
+            document.querySelector('.scan-btn').style.display = 'block';
+            document.getElementById('scan-result').classList.add('hidden');
+        }
+
+        function openWhatsApp() {
+            const phone = "60123456789"; // Replace with your business number
+            const message = "START";
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Simulate points loading
+        setTimeout(() => {
+            document.getElementById('pointsDisplay').textContent = '10 points';
+        }, 1000);
+    </script>
+</body>
+</html>
