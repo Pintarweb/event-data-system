@@ -60,9 +60,13 @@
                     const result = await response.json();
     
                     // Option 1: Redirect using pass_url
-                    if (result.pass_url && result.visitor_name) {
+                    if (result.pass_url && result.name) {
                           // Pass both visitor_id AND name to the pass page
-                            window.location.href = `${result.pass_url}&name=${encodeURIComponent(result.visitor_name)}`;
+                            window.location.href = `${result.pass_url}&name=${encodeURIComponent(result.name)}`;
+                        } else if (result.pass_url) {
+                          // Fallback if name is missing
+                          window.location.href = result.pass_url;
+                        }   
     }
                     // Option 2: Redirect using visitor_id
                     else if (result.visitor_id) {
