@@ -106,22 +106,33 @@
         // Load points from API
         async function loadVisitorPoints() {
             try {
+                console.log('Loading points for visitor:', visitorId);
+        
                 if (visitorId && visitorId !== 'unknown') {
-                    const response = await fetch(`https://n8n.pintarweb.com/api/visitor/${visitorId}/points`);
+                    // USE YOUR EXACT API URL
+                    const apiUrl = `https://n8n.pintarweb.com/webhook/c1aa03f8-f881-4e29-b7b5-cdf57b45b107/api/visitor/${visitorId}/points`;
+                    console.log('API URL:', apiUrl);
+            
+                    const response = await fetch(apiUrl);
+                    console.log('API Response status:', response.status);
+            
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('API Data received:', data);
                         document.getElementById('pointsDisplay').textContent = `${data.points} points`;
                     } else {
+                        console.log('API failed with status:', response.status);
                         document.getElementById('pointsDisplay').textContent = '0 points';
                     }
                 } else {
+                    console.log('No valid visitor ID');
                     document.getElementById('pointsDisplay').textContent = '0 points';
                 }
             } catch (error) {
                 console.error('Error loading points:', error);
                 document.getElementById('pointsDisplay').textContent = '0 points';
             }
-        }
+    }
 
         function startScan() {
             // Hide buttons, show scanner
