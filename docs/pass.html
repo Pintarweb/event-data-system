@@ -87,13 +87,13 @@
     <div id="scan-result" class="hidden success-message"></div>
 
     <script>
-        // Get visitor_id from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const visitorId = urlParams.get('visitor_id') || 'unknown';
-        let html5QrcodeScanner;
+        // Get both visitor_id and name from URL
+        const visitorId = urlParams.get('visitor_id');
+        const visitorName = urlParams.get('name') || 'Visitor';
+        document.getElementById('visitorName').textContent = `Welcome, ${visitorName}!`;
 
-        // Display visitor ID
-        document.getElementById('visitorIdDisplay').textContent = visitorId;
+        // Remove or hide the visitor ID display
+        document.getElementById('visitorIdDisplay').style.display = 'none';
 
         function startScan() {
             // Hide buttons, show scanner
