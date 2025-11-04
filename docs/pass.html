@@ -3,8 +3,7 @@
 <head>
     <title>Your Event Pass</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-    <style>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>    <style>
         body { 
             font-family: Arial, sans-serif; 
             max-width: 500px; 
@@ -135,19 +134,10 @@
         }
 
         function startScan() {
-            // Hide buttons, show scanner
-            document.getElementById('qr-reader').classList.remove('hidden');
-            document.getElementById('stop-btn').classList.remove('hidden');
-            document.querySelector('.scan-btn').style.display = 'none';
-            
-            // Initialize QR scanner
-            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
-                fps: 10, 
-                qrbox: 250,
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
-            });
-            
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            // Simple redirect to QR scan endpoint
+           const scanUrl = `https://n8n.pintarweb.com/webhook/qr-scan?vendor_id=V123&visitor_id=${visitorId}`;
+           console.log('Redirecting to:', scanUrl);
+           window.location.href = scanUrl;
         }
 
         function onScanSuccess(decodedText, decodedResult) {
