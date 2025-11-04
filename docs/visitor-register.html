@@ -85,9 +85,6 @@
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
 
-        // Store original form data for retry
-        let originalFormData = {};
-
         // Helper function to show messages
         function showMessage(message, type = 'error', options = {}) {
             const container = document.getElementById('messageContainer');
@@ -147,11 +144,6 @@
             duplicateFields.forEach(fieldName => {
                 const field = document.getElementById(fieldName + 'Field');
                 if (field) {
-                    // Store original value before clearing
-                    if (!originalFormData[fieldName]) {
-                        originalFormData[fieldName] = field.value;
-                    }
-                    
                     // Clear the field and add visual feedback
                     field.value = '';
                     field.classList.add('field-error');
@@ -203,8 +195,24 @@
                 });
                 
                 console.log('Response status:', response.status);
-                const result = await response.json();
-                console.log('Full response:', result);
+                
+                // Check if response has content before parsing JSON
+                let result;
+                const responseText = await response.text();
+                
+                if (responseText) {
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('Full response:', result);
+                    } catch (parseError) {
+                        console.error('JSON Parse Error:', parseError);
+                        console.log('Raw response:', responseText);
+                        throw new Error('Invalid server response');
+                    }
+                } else {
+                    console.log('Empty response from server');
+                    throw new Error('Empty server response');
+                }
                 
                 if (response.ok) {
                     // Handle duplicate errors
@@ -261,7 +269,12 @@
                     
                 } else {
                     // Handle HTTP errors
-                    showMessage('Registration failed. Please try again.', 'error', {
+                    let errorMessage = 'Registration failed. Please try again.';
+                    if (response.status === 429) {
+                        errorMessage += ' Too many attempts, please wait.';
+                    }
+                    
+                    showMessage(errorMessage, 'error', {
                         retryOptions: {
                             canRetry: true,
                             hasExistingPass: false,
@@ -273,7 +286,13 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage('Network error. Please check your connection.', 'error', {
+                let errorMessage = 'Network error. Please check your connection.';
+                
+                if (error.message.includes('Invalid server response') || error.message.includes('Empty server response')) {
+                    errorMessage = 'Server error. Please try again in a moment.';
+                }
+                
+                showMessage(errorMessage, 'error', {
                     retryOptions: {
                         canRetry: true,
                         hasExistingPass: false,
