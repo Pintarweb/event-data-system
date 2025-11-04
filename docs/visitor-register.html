@@ -11,10 +11,32 @@
         button { background: #25D366; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; font-size: 16px; cursor: pointer; }
         .hidden { display: none; }
         .loading { text-align: center; color: #666; margin: 20px 0; }
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #363;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h2>🎪 Event Registration</h2>
+    
+    <div id="messageContainer"></div>
+    
     <form id="registrationForm">
         <div class="form-group">
             <label>Full Name</label>
@@ -40,11 +62,56 @@
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
 
+        // Helper function to show messages
+        function showMessage(message, type = 'error') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = '';
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = type === 'error' ? 'error-message' : 'success-message';
+            messageElement.textContent = message;
+            
+            container.appendChild(messageElement);
+        }
+
+        // Helper function to clear specific fields
+        function clearFields(fieldsToClear) {
+            fieldsToClear.forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    field.value = '';
+                    // Add visual feedback
+                    field.style.border = '2px solid #ff9999';
+                    field.style.backgroundColor = '#fff9f9';
+                    
+                    // Remove visual feedback after 2 seconds
+                    setTimeout(() => {
+                        field.style.border = '1px solid #ddd';
+                        field.style.backgroundColor = '';
+                    }, 2000);
+                }
+            });
+            
+            // Focus on first cleared field
+            const firstField = document.querySelector(`[name="${fieldsToClear[0]}"]`);
+            if (firstField) {
+                firstField.focus();
+            }
+        }
+
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            
             // Show loading
             document.getElementById('loading').classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+            
+            // Clear any previous messages
+            document.getElementById('messageContainer').innerHTML = '';
             
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
@@ -61,25 +128,94 @@
                 console.log('Full response:', result);
                 
                 if (response.ok) {
-                    // DEBUG: Check what we're working with
+                    // Handle duplicate errors
+                    if (result.success === false) {
+                        if (result.error === "duplicate_phone") {
+                            showMessage("📱 This phone number is already registered! Please use a different number.");
+                            clearFields(['phone']);
+                            
+                            // Optional: Offer to go to existing pass
+                            if (result.existing_visitor?.visitor_id) {
+                                setTimeout(() => {
+                                    const goToPass = confirm("Would you like to go to your existing event pass?");
+                                    if (goToPass) {
+                                        const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.existing_visitor.visitor_id}&name=${encodeURIComponent(result.existing_visitor.name)}`;
+                                        window.location.href = passUrl;
+                                    }
+                                }, 1500);
+                            }
+                            return;
+                        }
+                        else if (result.error === "duplicate_email") {
+                            showMessage("📧 This email address is already registered! Please use a different email.");
+                            clearFields(['email']);
+                            
+                            // Optional: Offer to go to existing pass
+                            if (result.existing_visitor?.visitor_id) {
+                                setTimeout(() => {
+                                    const goToPass = confirm("Would you like to go to your existing event pass?");
+                                    if (goToPass) {
+                                        const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.existing_visitor.visitor_id}&name=${encodeURIComponent(result.existing_visitor.name)}`;
+                                        window.location.href = passUrl;
+                                    }
+                                }, 1500);
+                            }
+                            return;
+                        }
+                        else if (result.error === "duplicate_both") {
+                            showMessage("📱📧 Both phone number and email are already registered! Please use different contact information.");
+                            clearFields(['phone', 'email']);
+                            
+                            // Optional: Offer to go to existing pass
+                            if (result.existing_visitor?.visitor_id) {
+                                setTimeout(() => {
+                                    const goToPass = confirm("Would you like to go to your existing event pass?");
+                                    if (goToPass) {
+                                        const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.existing_visitor.visitor_id}&name=${encodeURIComponent(result.existing_visitor.name)}`;
+                                        window.location.href = passUrl;
+                                    }
+                                }, 1500);
+                            }
+                            return;
+                        }
+                        else {
+                            // Handle other application errors
+                            showMessage("Registration failed: " + (result.message || "Unknown error"));
+                            return;
+                        }
+                    }
+                    
+                    // SUCCESS - redirect to pass page
                     console.log('Name from form:', data.name);
                     console.log('Name from response:', result.name);
                     
-                    // Always use the name from the FORM (most reliable)
                     const visitorName = data.name || result.name || 'Visitor';
                     const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
                     
                     console.log('Final redirect to:', `${passUrl}&name=${encodeURIComponent(visitorName)}`);
                     window.location.href = `${passUrl}&name=${encodeURIComponent(visitorName)}`;
+                    
                 } else {
-                    alert('Registration failed. Please try again.');
+                    // Handle HTTP errors
+                    showMessage('Registration failed. Please try again. ' + 
+                               (response.status === 429 ? 'Too many attempts, please wait.' : ''));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Network error. Please check your connection.');
+                showMessage('Network error. Please check your connection and try again.');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
+        });
+
+        // Add input event listeners to remove error styling when user starts typing
+        document.querySelectorAll('input[name="phone"], input[name="email"]').forEach(input => {
+            input.addEventListener('input', function() {
+                this.style.border = '1px solid #ddd';
+                this.style.backgroundColor = '';
+            });
         });
     </script>
 </body>
