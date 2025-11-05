@@ -249,85 +249,99 @@
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const visitorId = urlParams.get('visitor_id');
-        const vendorId = urlparams.get('vendor_id');
+        const vendorId = urlParams.get('vendor_id');
 
-        // Check if we have visitor data in sessionStorage (from registration)
+        console.log('Debug - URL Parameters:', {
+            visitorId: visitorId,
+            vendorId: vendorId,
+            fullUrl: window.location.href
+        });
+
+        // Use hardcoded data for testing
+        const hardcodedData = {
+            "id": "f6d0cf97-53b1-46dd-8bf8-4fac87ed0893",
+            "name": "ggggg",
+            "phone": "00000000", 
+            "email": "dry@say",
+            "pass_url": "https://pintarweb.github.io/event-data-system/pass.html?visitor_id=f6d0cf97-53b1-46dd-8bf8-4fac87ed0893",
+            "total_points": 1,
+            "created_at": "2025-11-05T13:45:42.791895+00:00"
+        };
+
         function loadVisitorData() {
             const loading = document.getElementById('loading');
             const passContent = document.getElementById('passContent');
             const errorContent = document.getElementById('errorContent');
 
             try {
-                // Try to get data from sessionStorage first (from registration)
-                const storedData = sessionStorage.getItem('visitorData');
+                console.log('Loading visitor data...');
                 
-                if (storedData) {
-                    const visitorData = JSON.parse(storedData);
-                    console.log('Loaded from sessionStorage:', visitorData);
-                    displayVisitorData(visitorData);
-                    loading.style.display = 'none';
-                    passContent.style.display = 'block';
-                } else if (visitorId) {
-                    // If we have visitorId but no stored data, create basic data
-                    const basicData = {
-                        name: "Event Visitor",
-                        phone: visitorId,
-                        email: "Not provided",
-                        total_points: 0
-                    };
-                    displayVisitorData(basicData);
-                    loading.style.display = 'none';
-                    passContent.style.display = 'block';
-                } else {
-                    throw new Error('No visitor data found');
-                }
+                // For now, always use hardcoded data for testing
+                const visitorData = hardcodedData;
+                
+                console.log('Using data:', visitorData);
+                displayVisitorData(visitorData);
+                
+                // Hide loading, show pass content
+                if (loading) loading.style.display = 'none';
+                if (passContent) passContent.style.display = 'block';
+                if (errorContent) errorContent.style.display = 'none';
                 
             } catch (error) {
-                console.error('Error:', error);
-                loading.style.display = 'none';
-                errorContent.style.display = 'block';
-                document.getElementById('errorMessage').textContent = 
-                    'Please complete registration first by scanning a vendor QR code.';
+                console.error('Error loading pass:', error);
+                if (loading) loading.style.display = 'none';
+                if (passContent) passContent.style.display = 'none';
+                if (errorContent) {
+                    errorContent.style.display = 'block';
+                    document.getElementById('errorMessage').textContent = 
+                        'Error: ' + error.message;
+                }
             }
         }
 
         function displayVisitorData(data) {
             console.log('Displaying data:', data);
             
-            // Clean display - no visitor ID shown
-            document.getElementById('visitorName').innerHTML = data.name || 'Event Visitor';
-            document.getElementById('visitorPhone').textContent = data.phone || 'Not provided';
-            document.getElementById('visitorEmail').textContent = data.email || 'Not provided';
-            document.getElementById('pointsCount').textContent = data.total_points || data.points || 0;
-            document.getElementById('visitCount').textContent = `${data.visit_count || 1} visits`;
+            // Safely update DOM elements
+            const visitorName = document.getElementById('visitorName');
+            const visitorPhone = document.getElementById('visitorPhone');
+            const visitorEmail = document.getElementById('visitorEmail');
+            const pointsCount = document.getElementById('pointsCount');
+            const visitCount = document.getElementById('visitCount');
+            const badge = document.getElementById('visitorBadge');
+
+            if (visitorName) visitorName.innerHTML = data.name || 'Event Visitor';
+            if (visitorPhone) visitorPhone.textContent = data.phone || 'Not provided';
+            if (visitorEmail) visitorEmail.textContent = data.email || 'Not provided';
+            if (pointsCount) pointsCount.textContent = data.total_points || data.points || 0;
+            if (visitCount) visitCount.textContent = `${data.visit_count || 1} visits`;
             
             // Show VIP badge for high-point visitors
-            const badge = document.getElementById('visitorBadge');
-            const points = data.total_points || data.points || 0;
-            if (points >= 100) {
-                badge.textContent = 'VIP';
-                badge.style.background = '#FFD700';
-                badge.style.color = '#000';
-            } else if (points >= 50) {
-                badge.textContent = 'Regular';
-                badge.style.background = '#6c757d';
-                badge.style.color = 'white';
-            } else {
-                badge.style.display = 'none';
+            if (badge) {
+                const points = data.total_points || data.points || 0;
+                if (points >= 100) {
+                    badge.textContent = 'VIP';
+                    badge.style.background = '#FFD700';
+                    badge.style.color = '#000';
+                } else if (points >= 50) {
+                    badge.textContent = 'Regular';
+                    badge.style.background = '#6c757d';
+                    badge.style.color = 'white';
+                } else {
+                    badge.style.display = 'none';
+                }
             }
         }
 
-        // WhatsApp Button - Opens chat with START message
+        // WhatsApp Button
         document.getElementById('whatsappBtn').addEventListener('click', function() {
             const whatsappUrl = `https://wa.me/60123456789?text=START`;
             window.open(whatsappUrl, '_blank');
             
-            // Track that WhatsApp was opened
             if (visitorId) {
                 localStorage.setItem(`wa_opened_${visitorId}`, new Date().toISOString());
             }
             
-            // Show confirmation
             this.innerHTML = '<span>✅</span> WhatsApp Opened!';
             this.style.background = '#128C7E';
             setTimeout(() => {
@@ -336,32 +350,22 @@
             }, 2000);
         });
 
-        // Scan Button - Goes to QR scanning
+        // Scan Button
         document.getElementById('scanBtn').addEventListener('click', function() {
             if (visitorId) {
-                // For now, just show a message since we don't have qr-scan.html
                 alert('QR scanning would open here. Visitor ID: ' + visitorId);
-                // window.location.href = `qr-scan.html?visitor_id=${visitorId}`;
             } else {
                 alert('Please complete registration first');
                 window.location.href = 'visitor-register.html';
             }
         });
 
-        // Auto-open WhatsApp for first vendor visit
-        if (vendorId && visitorId && !localStorage.getItem(`wa_opened_${visitorId}`)) {
-            setTimeout(() => {
-                document.getElementById('whatsappBtn').click();
-            }, 1500);
-        }
-
-        // Initialize
-        if (visitorId) {
+        // Initialize - Always load data regardless of visitorId
+        console.log('Initializing pass page...');
+        setTimeout(() => {
             loadVisitorData();
-        } else {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('errorContent').style.display = 'block';
-        }
+        }, 500);
+
     </script>
 </body>
 </html>
