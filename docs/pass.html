@@ -210,7 +210,7 @@
             </div>
             
             <div id="passContent" style="display: none;">
-                <!-- Visitor Info - Clean without ID -->
+                <!-- Visitor Info -->
                 <div class="visitor-info">
                     <div class="visitor-name" id="visitorName">
                         Loading...
@@ -263,10 +263,16 @@
     </div>
 
     <script>
-        // Get URL parameters
+        // Get URL parameters - FIXED: using visitor_id (underscore)
         const urlParams = new URLSearchParams(window.location.search);
-        const visitorId = urlParams.get('visitor_id');
+        const visitorId = urlParams.get('visitor_id'); // FIXED: underscore, not dash
         const vendorId = urlParams.get('vendor_id');
+
+        console.log('URL Parameters:', {
+            visitorId: visitorId,
+            vendorId: vendorId,
+            fullUrl: window.location.href
+        });
 
         async function loadVisitorData() {
             const loading = document.getElementById('loading');
@@ -274,6 +280,8 @@
             const errorContent = document.getElementById('errorContent');
 
             try {
+                console.log('Loading visitor data for:', visitorId);
+                
                 // Load from your existing webhook
                 const response = await fetch('https://n8n.pintarweb.com/webhook/get-visitor', {
                     method: 'POST',
@@ -284,8 +292,11 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
+
                 if (response.ok) {
                     const visitorData = await response.json();
+                    console.log('Visitor data loaded:', visitorData);
                     displayVisitorData(visitorData);
                     loading.style.display = 'none';
                     passContent.style.display = 'block';
@@ -297,24 +308,29 @@
                 console.error('Error loading pass:', error);
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
+                document.getElementById('errorMessage').textContent = 
+                    'Error loading pass data. Please try again.';
             }
         }
 
         function displayVisitorData(data) {
+            console.log('Displaying data:', data);
+            
             // Clean display - no visitor ID shown
             document.getElementById('visitorName').innerHTML = data.name || 'Event Visitor';
             document.getElementById('visitorPhone').textContent = data.phone || 'Not provided';
             document.getElementById('visitorEmail').textContent = data.email || 'Not provided';
-            document.getElementById('pointsCount').textContent = data.points || 0;
-            document.getElementById('visitCount').textContent = `${data.visit_count || 0} visits`;
+            document.getElementById('pointsCount').textContent = data.total_points || data.points || 0;
+            document.getElementById('visitCount').textContent = `${data.visit_count || 1} visits`;
             
             // Show VIP badge for high-point visitors
             const badge = document.getElementById('visitorBadge');
-            if ((data.points || 0) >= 100) {
+            const points = data.total_points || data.points || 0;
+            if (points >= 100) {
                 badge.textContent = 'VIP';
                 badge.style.background = '#FFD700';
                 badge.style.color = '#000';
-            } else if ((data.points || 0) >= 50) {
+            } else if (points >= 50) {
                 badge.textContent = 'Regular';
                 badge.style.background = '#6c757d';
                 badge.style.color = 'white';
@@ -360,11 +376,15 @@
         }
 
         // Initialize
+        console.log('Initializing with visitorId:', visitorId);
         if (visitorId) {
             loadVisitorData();
         } else {
+            console.log('No visitorId found in URL');
             document.getElementById('loading').style.display = 'none';
             document.getElementById('errorContent').style.display = 'block';
+            document.getElementById('errorMessage').textContent = 
+                'Missing visitor ID. Please scan a vendor QR code first.';
         }
     </script>
 </body>
