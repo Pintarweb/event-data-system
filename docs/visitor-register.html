@@ -74,24 +74,34 @@
             container.appendChild(errorElement);
         }
 
-        // Helper function to highlight duplicate field
-        function highlightDuplicateField(fieldName) {
+        // Helper function to highlight duplicate fields
+        function highlightDuplicateFields(duplicateFields) {
             // Remove highlights from all fields first
             document.querySelectorAll('input').forEach(input => {
                 input.classList.remove('field-error');
+                input.placeholder = '';
             });
             
-            // Highlight the duplicate field
-            const field = document.getElementById(fieldName + 'Field');
-            if (field) {
-                field.classList.add('field-error');
-                field.focus();
-                
-                // Add help text based on field type
-                if (fieldName === 'phone') {
-                    field.placeholder = 'Please use a different phone number';
-                } else if (fieldName === 'email') {
-                    field.placeholder = 'Please use a different email address';
+            // Highlight each duplicate field
+            duplicateFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName + 'Field');
+                if (field) {
+                    field.classList.add('field-error');
+                    
+                    // Add appropriate placeholder based on field type
+                    if (fieldName === 'phone') {
+                        field.placeholder = 'Please use a different phone number';
+                    } else if (fieldName === 'email') {
+                        field.placeholder = 'Please use a different email address';
+                    }
+                }
+            });
+            
+            // Focus on first duplicate field
+            if (duplicateFields.length > 0) {
+                const firstField = document.getElementById(duplicateFields[0] + 'Field');
+                if (firstField) {
+                    firstField.focus();
                 }
             }
         }
@@ -132,45 +142,21 @@
                     console.log('Full response:', result);
                 } catch (jsonError) {
                     console.log('JSON parse failed');
-                    result = {
-                        success: false,
-                        error: "server_error",
-                        message: "Server response error"
-                    };
+                    showError('Server error. Please try again.');
+                    return;
                 }
                 
                 if (response.ok) {
                     // Handle duplicate errors
                     if (result.success === false) {
-                        let errorMessage = '';
-                        let duplicateField = '';
+                        let errorMessage = result.message || 'Registration failed';
                         
-                        if (result.error === "duplicate_phone") {
-                            errorMessage = "📱 This phone number is already registered. Please use a different phone number.";
-                            duplicateField = 'phone';
-                        }
-                        else if (result.error === "duplicate_email") {
-                            errorMessage = "📧 This email address is already registered. Please use a different email address.";
-                            duplicateField = 'email';
-                        }
-                        else if (result.error === "duplicate_both") {
-                            errorMessage = "📱📧 Both phone number and email are already registered. Please use different contact information.";
-                            duplicateField = 'phone'; // Focus on phone first
-                        }
-                        else {
-                            errorMessage = "Registration failed: " + (result.message || "Unknown error");
+                        // Use the duplicate_fields array from response
+                        if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                            highlightDuplicateFields(result.duplicate_fields);
                         }
                         
                         showError(errorMessage);
-                        
-                        // Highlight the duplicate field(s)
-                        if (duplicateField) {
-                            highlightDuplicateField(duplicateField);
-                        }
-                        if (result.error === "duplicate_both") {
-                            // Highlight both fields for duplicate_both case
-                            highlightDuplicateField('email');
-                        }
                         return;
                     }
                     
