@@ -108,7 +108,6 @@
                     retryBtn.className = 'retry-btn';
                     retryBtn.textContent = '🔄 Try Different Info';
                     retryBtn.onclick = function() {
-                        console.log('Try Again clicked');
                         if (options.retryOptions.onRetry) {
                             options.retryOptions.onRetry();
                         }
@@ -122,7 +121,6 @@
                     viewPassBtn.className = 'success-btn';
                     viewPassBtn.textContent = '🎫 View Existing Pass';
                     viewPassBtn.onclick = function() {
-                        console.log('View Pass clicked');
                         if (options.retryOptions.onViewPass) {
                             options.retryOptions.onViewPass();
                         }
@@ -139,24 +137,12 @@
 
         // Helper function to clear and highlight duplicate fields
         function handleDuplicateFields(duplicateFields) {
-            console.log('Clearing duplicate fields:', duplicateFields);
-            
             duplicateFields.forEach(fieldName => {
                 const field = document.getElementById(fieldName + 'Field');
                 if (field) {
-                    // Clear the field and add visual feedback
                     field.value = '';
                     field.classList.add('field-error');
                     field.placeholder = `Please use a different ${fieldName}`;
-                    
-                    console.log(`Cleared field: ${fieldName}`);
-                    
-                    // Remove error styling when user starts typing
-                    const removeErrorStyle = () => {
-                        field.classList.remove('field-error');
-                        field.removeEventListener('input', removeErrorStyle);
-                    };
-                    field.addEventListener('input', removeErrorStyle);
                 }
             });
             
@@ -166,7 +152,6 @@
                 firstField.focus();
             }
             
-            // Clear the message container
             document.getElementById('messageContainer').innerHTML = '';
         }
 
@@ -181,7 +166,6 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
             
-            // Clear any previous messages
             document.getElementById('messageContainer').innerHTML = '';
             
             const formData = new FormData(this);
@@ -196,22 +180,19 @@
                 
                 console.log('Response status:', response.status);
                 
-                // Check if response has content before parsing JSON
                 let result;
-                const responseText = await response.text();
-                
-                if (responseText) {
-                    try {
-                        result = JSON.parse(responseText);
-                        console.log('Full response:', result);
-                    } catch (parseError) {
-                        console.error('JSON Parse Error:', parseError);
-                        console.log('Raw response:', responseText);
-                        throw new Error('Invalid server response');
-                    }
-                } else {
-                    console.log('Empty response from server');
-                    throw new Error('Empty server response');
+                try {
+                    // Try to parse JSON response
+                    result = await response.json();
+                    console.log('Full response:', result);
+                } catch (jsonError) {
+                    // If JSON parsing fails, create a fallback result
+                    console.log('JSON parse failed, using fallback');
+                    result = {
+                        success: false,
+                        error: "server_error",
+                        message: "Server response error"
+                    };
                 }
                 
                 if (response.ok) {
@@ -240,20 +221,14 @@
                             message = "Registration failed: " + (result.message || "Unknown error");
                         }
                         
-                        console.log('Duplicate fields detected:', duplicateFields);
-                        console.log('Has existing pass:', hasExistingPass);
-                        
-                        // Show error with retry options
                         showMessage(message, 'error', {
                             retryOptions: {
                                 canRetry: true,
                                 hasExistingPass: hasExistingPass,
                                 onRetry: () => {
-                                    console.log('onRetry called with fields:', duplicateFields);
                                     handleDuplicateFields(duplicateFields);
                                 },
                                 onViewPass: () => {
-                                    console.log('Redirecting to existing pass');
                                     const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.existing_visitor.visitor_id}&name=${encodeURIComponent(result.existing_visitor.name)}`;
                                     window.location.href = passUrl;
                                 }
@@ -269,12 +244,7 @@
                     
                 } else {
                     // Handle HTTP errors
-                    let errorMessage = 'Registration failed. Please try again.';
-                    if (response.status === 429) {
-                        errorMessage += ' Too many attempts, please wait.';
-                    }
-                    
-                    showMessage(errorMessage, 'error', {
+                    showMessage('Registration failed. Please try again.', 'error', {
                         retryOptions: {
                             canRetry: true,
                             hasExistingPass: false,
@@ -286,13 +256,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                let errorMessage = 'Network error. Please check your connection.';
-                
-                if (error.message.includes('Invalid server response') || error.message.includes('Empty server response')) {
-                    errorMessage = 'Server error. Please try again in a moment.';
-                }
-                
-                showMessage(errorMessage, 'error', {
+                showMessage('Network error. Please check your connection and try again.', 'error', {
                     retryOptions: {
                         canRetry: true,
                         hasExistingPass: false,
