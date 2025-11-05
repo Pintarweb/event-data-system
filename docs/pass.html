@@ -5,20 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Event Pass</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
         body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
         
         .pass-container {
@@ -26,7 +22,6 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
-            max-width: 400px;
             width: 100%;
         }
         
@@ -37,146 +32,51 @@
             text-align: center;
         }
         
-        .pass-header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .pass-header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
         .pass-content {
             padding: 30px 20px;
         }
         
         .visitor-info {
             background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             text-align: center;
-            border-left: 4px solid #25D366;
-        }
-        
-        .visitor-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .visitor-details {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        .visitor-details div {
-            margin: 5px 0;
         }
         
         .points-display {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
+            background: #FFD700;
             color: #333;
-            padding: 18px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 10px;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-weight: bold;
-            font-size: 20px;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-        }
-        
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            font-size: 18px;
         }
         
         .btn {
-            padding: 18px 24px;
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
             text-align: center;
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
         }
         
         .btn-primary {
             background: #25D366;
             color: white;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-        }
-        
-        .btn-primary:hover {
-            background: #128C7E;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
         }
         
         .btn-secondary {
             background: #007bff;
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-        }
-        
-        .btn-secondary:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #6c757d;
-            color: #6c757d;
-        }
-        
-        .btn-outline:hover {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-        }
-        
-        .error {
-            text-align: center;
-            padding: 40px 20px;
-            color: #dc3545;
-        }
-        
-        .footer-note {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 12px;
-            color: #999;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .badge {
-            display: inline-block;
-            background: #e9ecef;
-            color: #495057;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            margin-left: 8px;
-            font-weight: normal;
         }
     </style>
 </head>
@@ -188,184 +88,59 @@
         </div>
         
         <div class="pass-content">
-            <div id="loading" class="loading">
-                Loading your pass...
+            <!-- Hardcoded Data - Will Always Show -->
+            <div class="visitor-info">
+                <h2 id="visitorName">ggggg</h2>
+                <p>📱 <span id="visitorPhone">00000000</span></p>
+                <p>📧 <span id="visitorEmail">dry@say</span></p>
+                <p>🏆 1 visit</p>
             </div>
             
-            <div id="passContent" style="display: none;">
-                <!-- Visitor Info -->
-                <div class="visitor-info">
-                    <div class="visitor-name" id="visitorName">
-                        Loading...
-                        <span class="badge" id="visitorBadge">VIP</span>
-                    </div>
-                    <div class="visitor-details">
-                        <div>📱 <span id="visitorPhone">Loading...</span></div>
-                        <div>📧 <span id="visitorEmail">Loading...</span></div>
-                        <div>🏆 <span id="visitCount">0 visits</span></div>
-                    </div>
-                </div>
-                
-                <!-- Points Display -->
-                <div class="points-display" id="pointsDisplay">
-                    ⭐ <span id="pointsCount">0</span> Reward Points
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button id="whatsappBtn" class="btn btn-primary">
-                        <span>💬</span>
-                        Confirm Visit & Earn Points
-                    </button>
-                    
-                    <button id="scanBtn" class="btn btn-secondary">
-                        <span>📷</span>
-                        Scan Next Booth
-                    </button>
-                    
-                    <a href="index.html" class="btn btn-outline">
-                        <span>⚡</span>
-                        Quick Registration
-                    </a>
-                </div>
-                
-                <div class="footer-note">
-                    <p>🔐 Bookmark this page for instant booth check-ins</p>
-                    <p style="margin-top: 5px; font-size: 11px;">Your pass works across all event booths</p>
-                </div>
+            <div class="points-display">
+                ⭐ <span id="pointsCount">1</span> Reward Points
             </div>
             
-            <div id="errorContent" class="error" style="display: none;">
-                <h3>❌ Pass Not Found</h3>
-                <p id="errorMessage">Please scan a vendor QR code to get started</p>
-                <a href="index.html" class="btn btn-secondary" style="margin-top: 15px;">
-                    Get Started
+            <div class="action-buttons">
+                <button id="whatsappBtn" class="btn btn-primary">
+                    💬 Confirm Visit & Earn Points
+                </button>
+                
+                <button id="scanBtn" class="btn btn-secondary">
+                    📷 Scan Next Booth
+                </button>
+                
+                <a href="index.html" class="btn" style="background: #6c757d; color: white;">
+                    ⚡ Quick Registration
                 </a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
+                <p>🔐 Bookmark this page for instant booth check-ins</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const visitorId = urlParams.get('visitor_id');
-        const vendorId = urlParams.get('vendor_id');
-
-        console.log('Debug - URL Parameters:', {
-            visitorId: visitorId,
-            vendorId: vendorId,
-            fullUrl: window.location.href
-        });
-
-        // Use hardcoded data for testing
-        const hardcodedData = {
-            "id": "f6d0cf97-53b1-46dd-8bf8-4fac87ed0893",
-            "name": "ggggg",
-            "phone": "00000000", 
-            "email": "dry@say",
-            "pass_url": "https://pintarweb.github.io/event-data-system/pass.html?visitor_id=f6d0cf97-53b1-46dd-8bf8-4fac87ed0893",
-            "total_points": 1,
-            "created_at": "2025-11-05T13:45:42.791895+00:00"
-        };
-
-        function loadVisitorData() {
-            const loading = document.getElementById('loading');
-            const passContent = document.getElementById('passContent');
-            const errorContent = document.getElementById('errorContent');
-
-            try {
-                console.log('Loading visitor data...');
-                
-                // For now, always use hardcoded data for testing
-                const visitorData = hardcodedData;
-                
-                console.log('Using data:', visitorData);
-                displayVisitorData(visitorData);
-                
-                // Hide loading, show pass content
-                if (loading) loading.style.display = 'none';
-                if (passContent) passContent.style.display = 'block';
-                if (errorContent) errorContent.style.display = 'none';
-                
-            } catch (error) {
-                console.error('Error loading pass:', error);
-                if (loading) loading.style.display = 'none';
-                if (passContent) passContent.style.display = 'none';
-                if (errorContent) {
-                    errorContent.style.display = 'block';
-                    document.getElementById('errorMessage').textContent = 
-                        'Error: ' + error.message;
-                }
-            }
-        }
-
-        function displayVisitorData(data) {
-            console.log('Displaying data:', data);
-            
-            // Safely update DOM elements
-            const visitorName = document.getElementById('visitorName');
-            const visitorPhone = document.getElementById('visitorPhone');
-            const visitorEmail = document.getElementById('visitorEmail');
-            const pointsCount = document.getElementById('pointsCount');
-            const visitCount = document.getElementById('visitCount');
-            const badge = document.getElementById('visitorBadge');
-
-            if (visitorName) visitorName.innerHTML = data.name || 'Event Visitor';
-            if (visitorPhone) visitorPhone.textContent = data.phone || 'Not provided';
-            if (visitorEmail) visitorEmail.textContent = data.email || 'Not provided';
-            if (pointsCount) pointsCount.textContent = data.total_points || data.points || 0;
-            if (visitCount) visitCount.textContent = `${data.visit_count || 1} visits`;
-            
-            // Show VIP badge for high-point visitors
-            if (badge) {
-                const points = data.total_points || data.points || 0;
-                if (points >= 100) {
-                    badge.textContent = 'VIP';
-                    badge.style.background = '#FFD700';
-                    badge.style.color = '#000';
-                } else if (points >= 50) {
-                    badge.textContent = 'Regular';
-                    badge.style.background = '#6c757d';
-                    badge.style.color = 'white';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-
-        // WhatsApp Button
+        // Simple WhatsApp button functionality
         document.getElementById('whatsappBtn').addEventListener('click', function() {
             const whatsappUrl = `https://wa.me/60123456789?text=START`;
             window.open(whatsappUrl, '_blank');
             
-            if (visitorId) {
-                localStorage.setItem(`wa_opened_${visitorId}`, new Date().toISOString());
-            }
-            
-            this.innerHTML = '<span>✅</span> WhatsApp Opened!';
+            // Show confirmation
+            this.textContent = '✅ WhatsApp Opened!';
             this.style.background = '#128C7E';
             setTimeout(() => {
-                this.innerHTML = '<span>💬</span> Confirm Visit & Earn Points';
+                this.textContent = '💬 Confirm Visit & Earn Points';
                 this.style.background = '';
             }, 2000);
         });
 
-        // Scan Button
+        // Simple Scan button functionality
         document.getElementById('scanBtn').addEventListener('click', function() {
-            if (visitorId) {
-                alert('QR scanning would open here. Visitor ID: ' + visitorId);
-            } else {
-                alert('Please complete registration first');
-                window.location.href = 'visitor-register.html';
-            }
+            alert('QR scanning would open here for booth check-in');
         });
 
-        // Initialize - Always load data regardless of visitorId
-        console.log('Initializing pass page...');
-        setTimeout(() => {
-            loadVisitorData();
-        }, 500);
-
+        console.log('Pass page loaded successfully!');
     </script>
 </body>
 </html>
