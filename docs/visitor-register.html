@@ -7,7 +7,7 @@
         body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         button { background: #25D366; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; font-size: 16px; cursor: pointer; }
         .hidden { display: none; }
         .loading { text-align: center; color: #666; margin: 20px 0; }
@@ -21,37 +21,14 @@
             text-align: center;
             font-weight: bold;
         }
-        .retry-options {
-            margin: 15px 0;
-            text-align: center;
-        }
-        .retry-btn {
-            background: #ff9900;
-            margin: 5px;
-            padding: 8px 15px;
-            width: auto;
-            display: inline-block;
-        }
-        .success-btn {
-            background: #25D366;
-            margin: 5px;
-            padding: 8px 15px;
-            width: auto;
-            display: inline-block;
-        }
         .field-error {
-            border: 2px solid #ff9999 !important;
+            border: 2px solid #ff4444 !important;
             background-color: #fff9f9 !important;
         }
-        .retry-buttons-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-        .retry-buttons-container button {
-            flex: 1;
-            min-width: 140px;
+        .field-error:focus {
+            outline: none;
+            border-color: #ff4444 !important;
+            box-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
         }
     </style>
 </head>
@@ -85,74 +62,38 @@
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
 
-        // Helper function to show messages
-        function showMessage(message, type = 'error', options = {}) {
+        // Helper function to show error messages
+        function showError(message) {
             const container = document.getElementById('messageContainer');
             container.innerHTML = '';
             
-            const messageElement = document.createElement('div');
-            messageElement.className = type === 'error' ? 'error-message' : 'success-message';
-            messageElement.innerHTML = message;
+            const errorElement = document.createElement('div');
+            errorElement.className = 'error-message';
+            errorElement.textContent = message;
             
-            // Add retry options for duplicate errors
-            if (type === 'error' && options.retryOptions) {
-                const retryDiv = document.createElement('div');
-                retryDiv.className = 'retry-options';
-                
-                const buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'retry-buttons-container';
-                
-                if (options.retryOptions.canRetry) {
-                    const retryBtn = document.createElement('button');
-                    retryBtn.type = 'button';
-                    retryBtn.className = 'retry-btn';
-                    retryBtn.textContent = '🔄 Try Different Info';
-                    retryBtn.onclick = function() {
-                        if (options.retryOptions.onRetry) {
-                            options.retryOptions.onRetry();
-                        }
-                    };
-                    buttonsContainer.appendChild(retryBtn);
-                }
-                
-                if (options.retryOptions.hasExistingPass) {
-                    const viewPassBtn = document.createElement('button');
-                    viewPassBtn.type = 'button';
-                    viewPassBtn.className = 'success-btn';
-                    viewPassBtn.textContent = '🎫 View Existing Pass';
-                    viewPassBtn.onclick = function() {
-                        if (options.retryOptions.onViewPass) {
-                            options.retryOptions.onViewPass();
-                        }
-                    };
-                    buttonsContainer.appendChild(viewPassBtn);
-                }
-                
-                retryDiv.appendChild(buttonsContainer);
-                messageElement.appendChild(retryDiv);
-            }
-            
-            container.appendChild(messageElement);
+            container.appendChild(errorElement);
         }
 
-        // Helper function to clear and highlight duplicate fields
-        function handleDuplicateFields(duplicateFields) {
-            duplicateFields.forEach(fieldName => {
-                const field = document.getElementById(fieldName + 'Field');
-                if (field) {
-                    field.value = '';
-                    field.classList.add('field-error');
-                    field.placeholder = `Please use a different ${fieldName}`;
-                }
+        // Helper function to highlight duplicate field
+        function highlightDuplicateField(fieldName) {
+            // Remove highlights from all fields first
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('field-error');
             });
             
-            // Focus on first duplicate field
-            const firstField = document.getElementById(duplicateFields[0] + 'Field');
-            if (firstField) {
-                firstField.focus();
+            // Highlight the duplicate field
+            const field = document.getElementById(fieldName + 'Field');
+            if (field) {
+                field.classList.add('field-error');
+                field.focus();
+                
+                // Add help text based on field type
+                if (fieldName === 'phone') {
+                    field.placeholder = 'Please use a different phone number';
+                } else if (fieldName === 'email') {
+                    field.placeholder = 'Please use a different email address';
+                }
             }
-            
-            document.getElementById('messageContainer').innerHTML = '';
         }
 
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
@@ -166,7 +107,12 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
             
+            // Clear any previous messages and field highlights
             document.getElementById('messageContainer').innerHTML = '';
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('field-error');
+                input.placeholder = '';
+            });
             
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
@@ -182,12 +128,10 @@
                 
                 let result;
                 try {
-                    // Try to parse JSON response
                     result = await response.json();
                     console.log('Full response:', result);
                 } catch (jsonError) {
-                    // If JSON parsing fails, create a fallback result
-                    console.log('JSON parse failed, using fallback');
+                    console.log('JSON parse failed');
                     result = {
                         success: false,
                         error: "server_error",
@@ -198,42 +142,35 @@
                 if (response.ok) {
                     // Handle duplicate errors
                     if (result.success === false) {
-                        let duplicateFields = [];
-                        let message = '';
-                        let hasExistingPass = false;
+                        let errorMessage = '';
+                        let duplicateField = '';
                         
                         if (result.error === "duplicate_phone") {
-                            duplicateFields = ['phone'];
-                            message = "📱 This phone number is already registered!";
-                            hasExistingPass = !!result.existing_visitor?.visitor_id;
+                            errorMessage = "📱 This phone number is already registered. Please use a different phone number.";
+                            duplicateField = 'phone';
                         }
                         else if (result.error === "duplicate_email") {
-                            duplicateFields = ['email'];
-                            message = "📧 This email address is already registered!";
-                            hasExistingPass = !!result.existing_visitor?.visitor_id;
+                            errorMessage = "📧 This email address is already registered. Please use a different email address.";
+                            duplicateField = 'email';
                         }
                         else if (result.error === "duplicate_both") {
-                            duplicateFields = ['phone', 'email'];
-                            message = "📱📧 Both phone number and email are already registered!";
-                            hasExistingPass = !!result.existing_visitor?.visitor_id;
+                            errorMessage = "📱📧 Both phone number and email are already registered. Please use different contact information.";
+                            duplicateField = 'phone'; // Focus on phone first
                         }
                         else {
-                            message = "Registration failed: " + (result.message || "Unknown error");
+                            errorMessage = "Registration failed: " + (result.message || "Unknown error");
                         }
                         
-                        showMessage(message, 'error', {
-                            retryOptions: {
-                                canRetry: true,
-                                hasExistingPass: hasExistingPass,
-                                onRetry: () => {
-                                    handleDuplicateFields(duplicateFields);
-                                },
-                                onViewPass: () => {
-                                    const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.existing_visitor.visitor_id}&name=${encodeURIComponent(result.existing_visitor.name)}`;
-                                    window.location.href = passUrl;
-                                }
-                            }
-                        });
+                        showError(errorMessage);
+                        
+                        // Highlight the duplicate field(s)
+                        if (duplicateField) {
+                            highlightDuplicateField(duplicateField);
+                        }
+                        if (result.error === "duplicate_both") {
+                            // Highlight both fields for duplicate_both case
+                            highlightDuplicateField('email');
+                        }
                         return;
                     }
                     
@@ -244,27 +181,11 @@
                     
                 } else {
                     // Handle HTTP errors
-                    showMessage('Registration failed. Please try again.', 'error', {
-                        retryOptions: {
-                            canRetry: true,
-                            hasExistingPass: false,
-                            onRetry: () => {
-                                document.getElementById('messageContainer').innerHTML = '';
-                            }
-                        }
-                    });
+                    showError('Registration failed. Please check your information and try again.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage('Network error. Please check your connection and try again.', 'error', {
-                    retryOptions: {
-                        canRetry: true,
-                        hasExistingPass: false,
-                        onRetry: () => {
-                            document.getElementById('messageContainer').innerHTML = '';
-                        }
-                    }
-                });
+                showError('Network error. Please check your connection and try again.');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
                 submitBtn.disabled = false;
@@ -272,7 +193,7 @@
             }
         });
 
-        // Add input event listeners to remove error styling
+        // Remove error styling when user starts typing in any field
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', function() {
                 if (this.classList.contains('field-error')) {
