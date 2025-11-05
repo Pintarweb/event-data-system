@@ -152,23 +152,6 @@
             color: #666;
         }
         
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #25D366;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         .error {
             text-align: center;
             padding: 40px 20px;
@@ -266,52 +249,45 @@
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const visitorId = urlParams.get('visitor_id');
-        const vendorId = urlParams.get('vendor_id');
+        const vendorId = urlparams.get('vendor_id');
 
-        // Use hardcoded data since we don't have a get-visitor webhook yet
-        const hardcodedData = {
-            "id": "f1b1e896-1733-4e6c-981b-a62ba851dda4",
-            "name": "tru",
-            "phone": "67890",
-            "email": "chgrhfhfghgfj@qqq",
-            "pass_url": "https://pintarweb.github.io/event-data-system/pass.html?visitor_id=f1b1e896-1733-4e6c-981b-a62ba851dda4",
-            "total_points": 1,
-            "created_at": "2025-11-05T13:26:14.276837+00:00"
-        };
-
+        // Check if we have visitor data in sessionStorage (from registration)
         function loadVisitorData() {
             const loading = document.getElementById('loading');
             const passContent = document.getElementById('passContent');
             const errorContent = document.getElementById('errorContent');
 
             try {
-                // For now, use hardcoded data since we don't have get-visitor webhook
-                console.log('Using hardcoded data for visitor:', visitorId);
+                // Try to get data from sessionStorage first (from registration)
+                const storedData = sessionStorage.getItem('visitorData');
                 
-                // If visitorId matches our hardcoded data, use it
-                let visitorData;
-                if (visitorId === "f1b1e896-1733-4e6c-981b-a62ba851dda4") {
-                    visitorData = hardcodedData;
-                } else {
-                    // Create basic data from visitorId
-                    visitorData = {
+                if (storedData) {
+                    const visitorData = JSON.parse(storedData);
+                    console.log('Loaded from sessionStorage:', visitorData);
+                    displayVisitorData(visitorData);
+                    loading.style.display = 'none';
+                    passContent.style.display = 'block';
+                } else if (visitorId) {
+                    // If we have visitorId but no stored data, create basic data
+                    const basicData = {
                         name: "Event Visitor",
-                        phone: visitorId || "Not provided",
-                        email: "Not provided", 
+                        phone: visitorId,
+                        email: "Not provided",
                         total_points: 0
                     };
+                    displayVisitorData(basicData);
+                    loading.style.display = 'none';
+                    passContent.style.display = 'block';
+                } else {
+                    throw new Error('No visitor data found');
                 }
-
-                displayVisitorData(visitorData);
-                loading.style.display = 'none';
-                passContent.style.display = 'block';
                 
             } catch (error) {
                 console.error('Error:', error);
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
                 document.getElementById('errorMessage').textContent = 
-                    'Error loading pass data: ' + error.message;
+                    'Please complete registration first by scanning a vendor QR code.';
             }
         }
 
