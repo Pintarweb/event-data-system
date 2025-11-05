@@ -174,16 +174,21 @@
                         showError(errorMessage);
                         return;
                     }
-
-                        const result = await response.json();
-    
-                    // Store visitor data in sessionStorage for the pass page
+                    
+                    // ✅ SUCCESS - Store data and redirect to pass page
+                    console.log('Storing visitor data in sessionStorage:', result);
+                    
+                    // Store the entire result object in sessionStorage
                     sessionStorage.setItem('visitorData', JSON.stringify(result));
                     
-                    // SUCCESS - redirect to pass page
+                    // Get the visitor name (use form data first, then result)
                     const visitorName = data.name || result.name || 'Visitor';
-                    const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
-                    window.location.href = `${passUrl}&name=${encodeURIComponent(visitorName)}`;
+                    
+                    // Get the pass URL (use result.pass_url or construct it)
+                    const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}`;
+                    
+                    console.log('Final redirect to:', passUrl);
+                    window.location.href = passUrl;
                     
                 } else {
                     // Handle HTTP errors
