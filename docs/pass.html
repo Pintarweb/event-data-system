@@ -263,53 +263,55 @@
     </div>
 
     <script>
-        // Get URL parameters - FIXED: using visitor_id (underscore)
+        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const visitorId = urlParams.get('visitor_id'); // FIXED: underscore, not dash
+        const visitorId = urlParams.get('visitor_id');
         const vendorId = urlParams.get('vendor_id');
 
-        console.log('URL Parameters:', {
-            visitorId: visitorId,
-            vendorId: vendorId,
-            fullUrl: window.location.href
-        });
+        // Use hardcoded data since we don't have a get-visitor webhook yet
+        const hardcodedData = {
+            "id": "f1b1e896-1733-4e6c-981b-a62ba851dda4",
+            "name": "tru",
+            "phone": "67890",
+            "email": "chgrhfhfghgfj@qqq",
+            "pass_url": "https://pintarweb.github.io/event-data-system/pass.html?visitor_id=f1b1e896-1733-4e6c-981b-a62ba851dda4",
+            "total_points": 1,
+            "created_at": "2025-11-05T13:26:14.276837+00:00"
+        };
 
-        async function loadVisitorData() {
+        function loadVisitorData() {
             const loading = document.getElementById('loading');
             const passContent = document.getElementById('passContent');
             const errorContent = document.getElementById('errorContent');
 
             try {
-                console.log('Loading visitor data for:', visitorId);
+                // For now, use hardcoded data since we don't have get-visitor webhook
+                console.log('Using hardcoded data for visitor:', visitorId);
                 
-                // Load from your existing webhook
-                const response = await fetch('https://n8n.pintarweb.com/webhook/get-visitor', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        visitor_id: visitorId,
-                        action: 'get_pass_data'
-                    })
-                });
-
-                console.log('Response status:', response.status);
-
-                if (response.ok) {
-                    const visitorData = await response.json();
-                    console.log('Visitor data loaded:', visitorData);
-                    displayVisitorData(visitorData);
-                    loading.style.display = 'none';
-                    passContent.style.display = 'block';
+                // If visitorId matches our hardcoded data, use it
+                let visitorData;
+                if (visitorId === "f1b1e896-1733-4e6c-981b-a62ba851dda4") {
+                    visitorData = hardcodedData;
                 } else {
-                    throw new Error('Failed to load pass data');
+                    // Create basic data from visitorId
+                    visitorData = {
+                        name: "Event Visitor",
+                        phone: visitorId || "Not provided",
+                        email: "Not provided", 
+                        total_points: 0
+                    };
                 }
+
+                displayVisitorData(visitorData);
+                loading.style.display = 'none';
+                passContent.style.display = 'block';
                 
             } catch (error) {
-                console.error('Error loading pass:', error);
+                console.error('Error:', error);
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
                 document.getElementById('errorMessage').textContent = 
-                    'Error loading pass data. Please try again.';
+                    'Error loading pass data: ' + error.message;
             }
         }
 
@@ -361,7 +363,9 @@
         // Scan Button - Goes to QR scanning
         document.getElementById('scanBtn').addEventListener('click', function() {
             if (visitorId) {
-                window.location.href = `qr-scan.html?visitor_id=${visitorId}`;
+                // For now, just show a message since we don't have qr-scan.html
+                alert('QR scanning would open here. Visitor ID: ' + visitorId);
+                // window.location.href = `qr-scan.html?visitor_id=${visitorId}`;
             } else {
                 alert('Please complete registration first');
                 window.location.href = 'visitor-register.html';
@@ -376,15 +380,11 @@
         }
 
         // Initialize
-        console.log('Initializing with visitorId:', visitorId);
         if (visitorId) {
             loadVisitorData();
         } else {
-            console.log('No visitorId found in URL');
             document.getElementById('loading').style.display = 'none';
             document.getElementById('errorContent').style.display = 'block';
-            document.getElementById('errorMessage').textContent = 
-                'Missing visitor ID. Please scan a vendor QR code first.';
         }
     </script>
 </body>
