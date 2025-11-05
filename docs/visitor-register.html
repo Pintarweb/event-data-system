@@ -74,25 +74,27 @@
             container.appendChild(errorElement);
         }
 
-        // Helper function to highlight duplicate fields
-        function highlightDuplicateFields(duplicateFields) {
+        // Helper function to clear and highlight duplicate fields
+        function handleDuplicateFields(duplicateFields) {
             // Remove highlights from all fields first
             document.querySelectorAll('input').forEach(input => {
                 input.classList.remove('field-error');
                 input.placeholder = '';
             });
             
-            // Highlight each duplicate field
+            // Clear and highlight each duplicate field
             duplicateFields.forEach(fieldName => {
                 const field = document.getElementById(fieldName + 'Field');
                 if (field) {
+                    // CLEAR the duplicate field value
+                    field.value = '';
                     field.classList.add('field-error');
                     
                     // Add appropriate placeholder based on field type
                     if (fieldName === 'phone') {
-                        field.placeholder = 'Please use a different phone number';
+                        field.placeholder = 'Please enter a different phone number';
                     } else if (fieldName === 'email') {
-                        field.placeholder = 'Please use a different email address';
+                        field.placeholder = 'Please enter a different email address';
                     }
                 }
             });
@@ -151,9 +153,22 @@
                     if (result.success === false) {
                         let errorMessage = result.message || 'Registration failed';
                         
-                        // Use the duplicate_fields array from response
-                        if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                            highlightDuplicateFields(result.duplicate_fields);
+                        // Handle all three duplicate conditions
+                        if (result.error === "duplicate_phone") {
+                            errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
+                            handleDuplicateFields(['phone']);
+                        }
+                        else if (result.error === "duplicate_email") {
+                            errorMessage = "📧 This email address is already registered. Please enter a different email address.";
+                            handleDuplicateFields(['email']);
+                        }
+                        else if (result.error === "duplicate_both") {
+                            errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
+                            handleDuplicateFields(['phone', 'email']);
+                        }
+                        else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                            // Fallback: use duplicate_fields array if available
+                            handleDuplicateFields(result.duplicate_fields);
                         }
                         
                         showError(errorMessage);
