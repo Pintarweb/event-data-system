@@ -39,16 +39,16 @@
     
     <form id="registrationForm">
         <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" name="name" required id="nameField">
+            <label>Full Name *</label>
+            <input type="text" name="name" required id="nameField" placeholder="Enter your full name">
         </div>
         <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" name="phone" required id="phoneField">
+            <label>Phone Number *</label>
+            <input type="tel" name="phone" required id="phoneField" placeholder="Enter your phone number">
         </div>
         <div class="form-group">
             <label>Email (Optional)</label>
-            <input type="email" name="email" id="emailField">
+            <input type="email" name="email" id="emailField" placeholder="Enter your email">
         </div>
         <input type="hidden" name="vendor_id" id="vendorId">
         <button type="submit" id="submitBtn">Register & Get Your Event Pass</button>
@@ -61,6 +61,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
+
+        console.log('🔄 Page loaded with vendor_id:', vendorId);
 
         // Helper function to show error messages
         function showError(message) {
@@ -76,21 +78,17 @@
 
         // Helper function to clear and highlight duplicate fields
         function handleDuplicateFields(duplicateFields) {
-            // Remove highlights from all fields first
             document.querySelectorAll('input').forEach(input => {
                 input.classList.remove('field-error');
                 input.placeholder = '';
             });
             
-            // Clear and highlight each duplicate field
             duplicateFields.forEach(fieldName => {
                 const field = document.getElementById(fieldName + 'Field');
                 if (field) {
-                    // CLEAR the duplicate field value
                     field.value = '';
                     field.classList.add('field-error');
                     
-                    // Add appropriate placeholder based on field type
                     if (fieldName === 'phone') {
                         field.placeholder = 'Please enter a different phone number';
                     } else if (fieldName === 'email') {
@@ -99,7 +97,6 @@
                 }
             });
             
-            // Focus on first duplicate field
             if (duplicateFields.length > 0) {
                 const firstField = document.getElementById(duplicateFields[0] + 'Field');
                 if (firstField) {
@@ -126,8 +123,18 @@
                 input.placeholder = '';
             });
             
+            // ✅ FIXED: Get form data properly
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
+            const data = {
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                email: formData.get('email') || '', // Always include email
+                vendor_id: formData.get('vendor_id')
+            };
+            
+            // ✅ DEBUG: Log what we're sending
+            console.log('📤 Data being sent to webhook:', data);
+            console.log('🕒 Timestamp:', new Date().toISOString());
             
             try {
                 const response = await fetch('https://n8n.pintarweb.com/webhook/visitor-register', {
@@ -136,15 +143,25 @@
                     body: JSON.stringify(data)
                 });
                 
-                console.log('Response status:', response.status);
+                console.log('📥 Response status:', response.status);
+                console.log('📥 Response headers:', response.headers);
                 
                 let result;
                 try {
-                    result = await response.json();
-                    console.log('Full response:', result);
+                    // First get the raw response text
+                    const responseText = await response.text();
+                    console.log('📥 Raw response text:', responseText);
+                    
+                    if (responseText && responseText.trim() !== '') {
+                        result = JSON.parse(responseText);
+                        console.log('📥 Parsed JSON response:', result);
+                    } else {
+                        console.log('❌ Empty response from server');
+                        throw new Error('Server returned empty response');
+                    }
                 } catch (jsonError) {
-                    console.log('JSON parse failed');
-                    showError('Server error. Please try again.');
+                    console.log('❌ JSON parse failed:', jsonError);
+                    showError('Server error: Invalid response. Please try again.');
                     return;
                 }
                 
@@ -153,7 +170,6 @@
                     if (result.success === false) {
                         let errorMessage = result.message || 'Registration failed';
                         
-                        // Handle all three duplicate conditions
                         if (result.error === "duplicate_phone") {
                             errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
                             handleDuplicateFields(['phone']);
@@ -167,7 +183,6 @@
                             handleDuplicateFields(['phone', 'email']);
                         }
                         else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                            // Fallback: use duplicate_fields array if available
                             handleDuplicateFields(result.duplicate_fields);
                         }
                         
@@ -176,7 +191,7 @@
                     }
                     
                     // ✅ SUCCESS - Store data and redirect to pass page
-                    console.log('Storing visitor data in sessionStorage:', result);
+                    console.log('✅ Registration successful! Storing data:', result);
                     
                     // Store the entire result object in sessionStorage
                     sessionStorage.setItem('visitorData', JSON.stringify(result));
@@ -187,15 +202,16 @@
                     // Get the pass URL (use result.pass_url or construct it)
                     const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}`;
                     
-                    console.log('Final redirect to:', passUrl);
+                    console.log('🔄 Redirecting to:', passUrl);
                     window.location.href = passUrl;
                     
                 } else {
                     // Handle HTTP errors
-                    showError('Registration failed. Please check your information and try again.');
+                    console.log('❌ HTTP error:', response.status);
+                    showError(`Registration failed (Error ${response.status}). Please check your information and try again.`);
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Network error:', error);
                 showError('Network error. Please check your connection and try again.');
             } finally {
                 document.getElementById('loading').classList.add('hidden');
@@ -204,7 +220,7 @@
             }
         });
 
-        // Remove error styling when user starts typing in any field
+        // Remove error styling when user starts typing
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', function() {
                 if (this.classList.contains('field-error')) {
