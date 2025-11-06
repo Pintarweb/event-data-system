@@ -213,13 +213,13 @@
                 <!-- Visitor Info -->
                 <div class="visitor-info">
                     <div class="visitor-name" id="visitorName">
-                        Event Visitor
+                        Loading...
                         <span class="badge" id="visitorBadge">New</span>
                     </div>
                     <div class="visitor-details">
                         <div>📱 <span id="visitorPhone">Loading...</span></div>
-                        <div>📧 <span id="visitorEmail">Not provided</span></div>
-                        <div>🏆 <span id="visitCount">1 visit</span></div>
+                        <div>📧 <span id="visitorEmail">Loading...</span></div>
+                        <div>🏆 <span id="visitCount">Loading visits...</span></div>
                     </div>
                 </div>
                 
@@ -271,19 +271,21 @@
         // DOM elements
         const loading = document.getElementById('loading');
         const passContent = document.getElementById('passContent');
-        
+        const errorContent = document.getElementById('errorContent');
+
         async function loadVisitorData() {
             console.log('Loading pass for visitor:', visitorId);
-    
+            
             try {
                 console.log('Calling webhook to get visitor data...');
-        
+                
+                // Call your webhook to get the actual visitor data
                 const response = await fetch('https://n8n.pintarweb.com/webhook/visitor-register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         visitor_id: visitorId,
-                        action: 'get_visitor_data'
+                        action: 'get_visitor'
                     })
                 });
 
@@ -291,41 +293,41 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Webhook returned visitor data:', result);
-            
+                    console.log('Webhook returned data:', result);
+                    
                     // Your webhook returns an array, so get the first item
                     let visitorData;
                     if (Array.isArray(result) && result.length > 0) {
-                visitorData = result[0];
+                        visitorData = result[0];
                     } else {
                         visitorData = result;
                     }
-            
+                    
                     console.log('Using visitor data:', visitorData);
                     displayVisitorData(visitorData);
-            
+                    
                 } else {
-                    throw new Error('Webhook returned error status');
+                    throw new Error('Webhook returned error status: ' + response.status);
                 }
-        
+                
                 // Show pass content
                 loading.style.display = 'none';
                 passContent.style.display = 'block';
                 errorContent.style.display = 'none';
-        
+                
             } catch (error) {
                 console.error('Error loading visitor data:', error);
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
                 document.getElementById('errorMessage').textContent = 
-                    'Error loading pass data. Please try again.';
+                    'Error loading pass data: ' + error.message;
             }
         }
 
         function displayVisitorData(data) {
-            console.log('Displaying data:', data);
+            console.log('Displaying visitor data:', data);
             
-            // Update all display elements
+            // Update all display elements with REAL data
             const visitorName = document.getElementById('visitorName');
             const visitorPhone = document.getElementById('visitorPhone');
             const visitorEmail = document.getElementById('visitorEmail');
@@ -416,10 +418,7 @@
         // Initialize
         console.log('Initializing pass page with visitorId:', visitorId);
         if (visitorId) {
-            // Small delay to show loading animation
-            setTimeout(() => {
-                loadVisitorData();
-            }, 500);
+            loadVisitorData();
         } else {
             loading.style.display = 'none';
             errorContent.style.display = 'block';
