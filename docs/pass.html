@@ -195,16 +195,6 @@
             margin-left: 8px;
             font-weight: normal;
         }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -220,21 +210,16 @@
             </div>
             
             <div id="passContent" style="display: none;">
-                <div id="successMessage" class="success-message">
-                    ✅ Pass loaded successfully!
-                </div>
-                
                 <!-- Visitor Info -->
                 <div class="visitor-info">
                     <div class="visitor-name" id="visitorName">
-                        Loading...
+                        Event Visitor
                         <span class="badge" id="visitorBadge">New</span>
                     </div>
                     <div class="visitor-details">
                         <div>📱 <span id="visitorPhone">Loading...</span></div>
-                        <div>📧 <span id="visitorEmail">Loading...</span></div>
-                        <div>🏆 <span id="visitCount">Loading visits...</span></div>
-                        <div>🆔 <span id="visitorId" style="font-size: 10px; color: #999;">Loading ID...</span></div>
+                        <div>📧 <span id="visitorEmail">Not provided</span></div>
+                        <div>🏆 <span id="visitCount">1 visit</span></div>
                     </div>
                 </div>
                 
@@ -268,16 +253,11 @@
             </div>
             
             <div id="errorContent" class="error" style="display: none;">
-                <h3>❌ Unable to Load Pass</h3>
-                <p id="errorMessage">Please try scanning a vendor QR code first</p>
-                <div class="action-buttons">
-                    <a href="visitor-register.html" class="btn btn-primary">
-                        Start Registration
-                    </a>
-                    <button onclick="retryLoad()" class="btn btn-secondary">
-                        Retry Loading
-                    </button>
-                </div>
+                <h3>❌ Pass Not Found</h3>
+                <p id="errorMessage">Please scan a vendor QR code to get started</p>
+                <a href="visitor-register.html" class="btn btn-secondary" style="margin-top: 15px;">
+                    Get Started
+                </a>
             </div>
         </div>
     </div>
@@ -292,147 +272,88 @@
         const loading = document.getElementById('loading');
         const passContent = document.getElementById('passContent');
         const errorContent = document.getElementById('errorContent');
-        const successMessage = document.getElementById('successMessage');
 
-        // Fallback data structure matching your webhook response
-        const fallbackData = {
-            name: "Event Visitor",
-            phone: "Not provided",
-            email: "Not provided",
-            total_points: 0,
-            visit_count: 1
-        };
-
-        async function loadVisitorData() {
-            console.log('Starting to load visitor data...');
+        function loadVisitorData() {
+            console.log('Loading pass for visitor:', visitorId);
             
             try {
-                // First, try to get data from your webhook
-                console.log('Calling webhook for visitor:', visitorId);
-                
-                const response = await fetch('https://n8n.pintarweb.com/webhook/visitor-register', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        visitor_id: visitorId,
-                        action: 'get_visitor_data'
-                    })
-                });
+                // Create basic visitor data from the visitor_id
+                const visitorData = {
+                    name: "Event Visitor",
+                    phone: visitorId || "Not provided",
+                    email: "Not provided",
+                    total_points: 0,
+                    visit_count: 1,
+                    id: visitorId
+                };
 
-                console.log('Webhook response status:', response.status);
-
-                let visitorData;
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Webhook response data:', result);
-                    
-                    // Handle array response (your webhook returns an array)
-                    if (Array.isArray(result) && result.length > 0) {
-                        visitorData = result[0];
-                    } else if (typeof result === 'object') {
-                        visitorData = result;
-                    } else {
-                        throw new Error('Unexpected response format');
-                    }
-                } else {
-                    console.log('Webhook failed, using fallback data');
-                    visitorData = { ...fallbackData, phone: visitorId || 'Not provided' };
-                }
-
-                // Display the data
+                console.log('Created visitor data:', visitorData);
                 displayVisitorData(visitorData);
                 
-                // Show success
+                // Show pass content
                 loading.style.display = 'none';
                 passContent.style.display = 'block';
                 errorContent.style.display = 'none';
-                successMessage.style.display = 'block';
                 
-                console.log('Pass data loaded successfully');
-
             } catch (error) {
-                console.error('Error loading visitor data:', error);
-                
-                // Use fallback data with visitor ID
-                const fallback = { 
-                    ...fallbackData, 
-                    phone: visitorId || 'Not provided',
-                    name: 'Event Visitor'
-                };
-                displayVisitorData(fallback);
-                
+                console.error('Error:', error);
                 loading.style.display = 'none';
-                passContent.style.display = 'block';
-                errorContent.style.display = 'none';
-                
-                successMessage.textContent = '⚠️ Using cached data - some features may be limited';
-                successMessage.style.background = '#fff3cd';
-                successMessage.style.color = '#856404';
-                successMessage.style.display = 'block';
+                errorContent.style.display = 'block';
+                document.getElementById('errorMessage').textContent = 
+                    'Error loading pass. Please try scanning a QR code again.';
             }
         }
 
         function displayVisitorData(data) {
-            console.log('Displaying visitor data:', data);
+            console.log('Displaying data:', data);
             
-            // Update all display elements safely
-            const elements = {
-                visitorName: document.getElementById('visitorName'),
-                visitorPhone: document.getElementById('visitorPhone'),
-                visitorEmail: document.getElementById('visitorEmail'),
-                pointsCount: document.getElementById('pointsCount'),
-                visitCount: document.getElementById('visitCount'),
-                visitorId: document.getElementById('visitorId'),
-                visitorBadge: document.getElementById('visitorBadge')
-            };
+            // Update all display elements
+            const visitorName = document.getElementById('visitorName');
+            const visitorPhone = document.getElementById('visitorPhone');
+            const visitorEmail = document.getElementById('visitorEmail');
+            const pointsCount = document.getElementById('pointsCount');
+            const visitCount = document.getElementById('visitCount');
+            const badge = document.getElementById('visitorBadge');
 
-            if (elements.visitorName) {
-                elements.visitorName.innerHTML = data.name || 'Event Visitor';
+            if (visitorName) {
+                visitorName.innerHTML = data.name || 'Event Visitor';
             }
             
-            if (elements.visitorPhone) {
-                elements.visitorPhone.textContent = data.phone || 'Not provided';
+            if (visitorPhone) {
+                visitorPhone.textContent = data.phone || 'Not provided';
             }
             
-            if (elements.visitorEmail) {
-                elements.visitorEmail.textContent = data.email || 'Not provided';
+            if (visitorEmail) {
+                visitorEmail.textContent = data.email || 'Not provided';
             }
             
-            if (elements.pointsCount) {
-                elements.pointsCount.textContent = data.total_points || data.points || 0;
+            if (pointsCount) {
+                pointsCount.textContent = data.total_points || data.points || 0;
             }
             
-            if (elements.visitCount) {
-                elements.visitCount.textContent = `${data.visit_count || 1} visits`;
-            }
-            
-            if (elements.visitorId) {
-                elements.visitorId.textContent = data.id ? `ID: ${data.id.substring(0, 8)}...` : 'ID: Not available';
+            if (visitCount) {
+                visitCount.textContent = `${data.visit_count || 1} visits`;
             }
 
             // Update badge based on points
-            if (elements.visitorBadge) {
+            if (badge) {
                 const points = data.total_points || data.points || 0;
                 if (points >= 100) {
-                    elements.visitorBadge.textContent = 'VIP';
-                    elements.visitorBadge.style.background = '#FFD700';
-                    elements.visitorBadge.style.color = '#000';
+                    badge.textContent = 'VIP';
+                    badge.style.background = '#FFD700';
+                    badge.style.color = '#000';
                 } else if (points >= 50) {
-                    elements.visitorBadge.textContent = 'Regular';
-                    elements.visitorBadge.style.background = '#6c757d';
-                    elements.visitorBadge.style.color = 'white';
+                    badge.textContent = 'Regular';
+                    badge.style.background = '#6c757d';
+                    badge.style.color = 'white';
                 } else if (points >= 10) {
-                    elements.visitorBadge.textContent = 'Active';
-                    elements.visitorBadge.style.background = '#28a745';
-                    elements.visitorBadge.style.color = 'white';
+                    badge.textContent = 'Active';
+                    badge.style.background = '#28a745';
+                    badge.style.color = 'white';
                 } else {
-                    elements.visitorBadge.textContent = 'New';
-                    elements.visitorBadge.style.background = '#17a2b8';
-                    elements.visitorBadge.style.color = 'white';
+                    badge.textContent = 'New';
+                    badge.style.background = '#17a2b8';
+                    badge.style.color = 'white';
                 }
             }
         }
@@ -457,22 +378,12 @@
         // Scan Button
         document.getElementById('scanBtn').addEventListener('click', function() {
             if (visitorId) {
-                // For now, show a message - we'll implement QR scanning later
-                alert(`Ready to scan! Your visitor ID: ${visitorId}\n\nThis will open your camera to scan booth QR codes.`);
+                alert(`Ready to scan next booth! Your visitor ID: ${visitorId}\n\nThis will open your camera to scan booth QR codes.`);
             } else {
                 alert('Please complete registration first');
                 window.location.href = 'visitor-register.html';
             }
         });
-
-        // Retry function
-        function retryLoad() {
-            loading.style.display = 'block';
-            passContent.style.display = 'none';
-            errorContent.style.display = 'none';
-            successMessage.style.display = 'none';
-            loadVisitorData();
-        }
 
         // Auto-open WhatsApp for first vendor visit
         if (vendorId && visitorId && !localStorage.getItem(`wa_opened_${visitorId}`)) {
@@ -481,22 +392,22 @@
                 if (whatsappBtn) {
                     whatsappBtn.click();
                 }
-            }, 2000);
+            }, 1500);
         }
 
         // Initialize
         console.log('Initializing pass page with visitorId:', visitorId);
         if (visitorId) {
-            loadVisitorData();
+            // Small delay to show loading animation
+            setTimeout(() => {
+                loadVisitorData();
+            }, 500);
         } else {
             loading.style.display = 'none';
             errorContent.style.display = 'block';
             document.getElementById('errorMessage').textContent = 
                 'No visitor ID found. Please scan a vendor QR code to get your pass.';
         }
-
-        // Add some debug info to the page
-        console.log('Page loaded successfully. Visitor ID:', visitorId);
     </script>
 </body>
 </html>
