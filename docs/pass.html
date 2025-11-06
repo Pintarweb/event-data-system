@@ -272,28 +272,41 @@
         const loading = document.getElementById('loading');
         const passContent = document.getElementById('passContent');
         
-        function loadVisitorData() {
+        async function loadVisitorData() {
             console.log('Loading pass for visitor:', visitorId);
     
             try {
-                // Get actual data from URL parameters
-                const visitorName = urlParams.get('name') || "Event Visitor";
-                const visitorPhone = urlParams.get('phone') || visitorId || "Not provided";
-                const visitorEmail = urlParams.get('email') || "Not provided";
-                const visitorPoints = parseInt(urlParams.get('points')) || 0;
+                console.log('Calling webhook to get visitor data...');
+        
+                const response = await fetch('https://n8n.pintarweb.com/webhook/visitor-register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        visitor_id: visitorId,
+                        action: 'get_visitor_data'
+                    })
+                });
 
-                // Create visitor data from URL parameters
-                const visitorData = {
-                    name: visitorName,
-                    phone: visitorPhone,
-                    email: visitorEmail,
-                    total_points: visitorPoints,
-                    visit_count: 1,
-                    id: visitorId
-                };
+                console.log('Webhook response status:', response.status);
 
-                console.log('Created visitor data from URL:', visitorData);
-                displayVisitorData(visitorData);
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Webhook returned visitor data:', result);
+            
+                    // Your webhook returns an array, so get the first item
+                    let visitorData;
+                    if (Array.isArray(result) && result.length > 0) {
+                visitorData = result[0];
+                    } else {
+                        visitorData = result;
+                    }
+            
+                    console.log('Using visitor data:', visitorData);
+                    displayVisitorData(visitorData);
+            
+                } else {
+                    throw new Error('Webhook returned error status');
+                }
         
                 // Show pass content
                 loading.style.display = 'none';
@@ -301,11 +314,11 @@
                 errorContent.style.display = 'none';
         
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading visitor data:', error);
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
                 document.getElementById('errorMessage').textContent = 
-                    'Error loading pass. Please try scanning a QR code again.';
+                    'Error loading pass data. Please try again.';
             }
         }
 

@@ -175,19 +175,15 @@
                         return;
                     }
                     
-                        // SUCCESS - redirect to pass page with actual data
-                        console.log('Registration successful, redirecting to pass page');
+                // SUCCESS - Use the webhook response data
+                console.log('Registration successful! Webhook response:', result);
 
-                        // Get the actual data from the form
-                        const visitorName = data.name;
-                        const visitorPhone = data.phone;
-                        const visitorEmail = data.email || 'Not provided';
+                // The webhook returns the visitor data in result
+                // Use it to redirect to pass page
+                const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}`;
 
-                        // Create pass URL with actual data as URL parameters
-                        const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}&name=${encodeURIComponent(visitorName)}&phone=${encodeURIComponent(visitorPhone)}&email=${encodeURIComponent(visitorEmail)}&points=${result.total_points || 0}`;
-
-                        console.log('Redirecting to:', passUrl);
-                        window.location.href = passUrl;
+                console.log('Redirecting to pass page:', passUrl);
+                window.location.href = passUrl;        
                     
                 } else {
                     // Handle HTTP errors
