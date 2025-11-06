@@ -175,19 +175,14 @@
                         return;
                     }
                     
-                // SUCCESS - Use the webhook response data
-                console.log('Registration successful! Webhook response:', result);
-
-                // The webhook returns the visitor data in result
-                // Use it to redirect to pass page
-                const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}`;
-
-                console.log('Redirecting to pass page:', passUrl);
-                window.location.href = passUrl;        
+                    // SUCCESS - redirect to pass page
+                    const visitorName = data.name || result.name || 'Visitor';
+                    const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
+                    window.location.href = `${passUrl}&name=${encodeURIComponent(visitorName)}`;
                     
                 } else {
                     // Handle HTTP errors
-                    showError('Registration failed. Please try again.');
+                    showError('Registration failed. Please check your information and try again.');
                 }
             } catch (error) {
                 console.error('Error:', error);
