@@ -277,7 +277,8 @@
             console.log('Loading pass for visitor:', visitorId);
             
             try {
-                // Create basic visitor data from the visitor_id
+                // Create basic visitor data from the visitor_id only
+                // NO WEBHOOK CALLS - just create basic profile
                 const visitorData = {
                     name: "Event Visitor",
                     phone: visitorId || "Not provided",
