@@ -273,38 +273,23 @@
         const passContent = document.getElementById('passContent');
         const errorContent = document.getElementById('errorContent');
 
-        async function loadVisitorData() {
-            console.log('Loading pass for visitor:', visitorId);
-            
-            try {
-                console.log('Calling webhook to get visitor data...');
-                
-                // Call your webhook to get the actual visitor data
-                const response = await fetch('https://n8n.pintarweb.com/webhook/visitor-register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        visitor_id: visitorId,
-                        action: 'get_visitor'
-                    })
-                });
+        function loadVisitorData() {
+            // Get REAL data from URL parameters (built by n8n)
+            const visitorName = urlParams.get('name');
+            const visitorPhone = urlParams.get('phone');
+            const visitorEmail = urlParams.get('email');
+            const visitorPoints = parseInt(urlParams.get('points')) || 0;
 
-                console.log('Webhook response status:', response.status);
+            const visitorData = {
+                name: visitorName,
+                phone: visitorPhone,
+                email: visitorEmail,
+                total_points: visitorPoints,
+                visit_count: 1
+            };
 
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Webhook returned data:', result);
-                    
-                    // Your webhook returns an array, so get the first item
-                    let visitorData;
-                    if (Array.isArray(result) && result.length > 0) {
-                        visitorData = result[0];
-                    } else {
-                        visitorData = result;
-                    }
-                    
-                    console.log('Using visitor data:', visitorData);
-                    displayVisitorData(visitorData);
+            displayVisitorData(visitorData);
+        }
                     
                 } else {
                     throw new Error('Webhook returned error status: ' + response.status);
