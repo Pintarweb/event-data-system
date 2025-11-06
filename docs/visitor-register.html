@@ -175,14 +175,19 @@
                         return;
                     }
                     
-                    // ✅ SIMPLE SUCCESS - Just redirect with visitor_id
-                    console.log('Registration successful, redirecting to pass page');
-                    
-                    const visitorName = data.name || result.name || 'Visitor';
-                    const passUrl = result.pass_url || `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
-                    
-                    console.log('Redirecting to:', passUrl);
-                    window.location.href = passUrl;
+                        // SUCCESS - redirect to pass page with actual data
+                        console.log('Registration successful, redirecting to pass page');
+
+                        // Get the actual data from the form
+                        const visitorName = data.name;
+                        const visitorPhone = data.phone;
+                        const visitorEmail = data.email || 'Not provided';
+
+                        // Create pass URL with actual data as URL parameters
+                        const passUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id || result.id}&name=${encodeURIComponent(visitorName)}&phone=${encodeURIComponent(visitorPhone)}&email=${encodeURIComponent(visitorEmail)}&points=${result.total_points || 0}`;
+
+                        console.log('Redirecting to:', passUrl);
+                        window.location.href = passUrl;
                     
                 } else {
                     // Handle HTTP errors

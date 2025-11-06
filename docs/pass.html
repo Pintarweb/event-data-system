@@ -271,31 +271,35 @@
         // DOM elements
         const loading = document.getElementById('loading');
         const passContent = document.getElementById('passContent');
-        const errorContent = document.getElementById('errorContent');
-
+        
         function loadVisitorData() {
             console.log('Loading pass for visitor:', visitorId);
-            
+    
             try {
-                // Create basic visitor data from the visitor_id only
-                // NO WEBHOOK CALLS - just create basic profile
+                // Get actual data from URL parameters
+                const visitorName = urlParams.get('name') || "Event Visitor";
+                const visitorPhone = urlParams.get('phone') || visitorId || "Not provided";
+                const visitorEmail = urlParams.get('email') || "Not provided";
+                const visitorPoints = parseInt(urlParams.get('points')) || 0;
+
+                // Create visitor data from URL parameters
                 const visitorData = {
-                    name: "Event Visitor",
-                    phone: visitorId || "Not provided",
-                    email: "Not provided",
-                    total_points: 0,
+                    name: visitorName,
+                    phone: visitorPhone,
+                    email: visitorEmail,
+                    total_points: visitorPoints,
                     visit_count: 1,
                     id: visitorId
                 };
 
-                console.log('Created visitor data:', visitorData);
+                console.log('Created visitor data from URL:', visitorData);
                 displayVisitorData(visitorData);
-                
+        
                 // Show pass content
                 loading.style.display = 'none';
                 passContent.style.display = 'block';
                 errorContent.style.display = 'none';
-                
+        
             } catch (error) {
                 console.error('Error:', error);
                 loading.style.display = 'none';
