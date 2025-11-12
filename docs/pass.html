@@ -117,10 +117,15 @@
             box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #128C7E;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         
         .btn-secondary {
@@ -255,7 +260,7 @@
             <div id="errorContent" class="error" style="display: none;">
                 <h3>❌ Pass Not Found</h3>
                 <p id="errorMessage">Please scan a vendor QR code to get started</p>
-                <a href="visitor-register.html" class="btn btn-secondary" style="margin-top: 15px;">
+                <a href="visitor-register.html" class="btn btn-secondary" style="margin-top: 15px; display: inline-block;">
                     Get Started
                 </a>
             </div>
@@ -263,6 +268,11 @@
     </div>
 
     <script>
+        // Configuration - UPDATE THIS WITH YOUR WHATSAPP NUMBER
+        const WHATSAPP_NUMBER = '60123456789'; // Change this to your actual WhatsApp number
+        const N8N_GET_VISITOR_URL = 'https://n8n.pintarweb.com/webhook/get-visitor';
+        const N8N_WHATSAPP_WEBHOOK = 'https://n8n.pintarweb.com/webhook/whatsapp-incoming';
+        
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const visitorId = urlParams.get('visitor_id');
@@ -273,134 +283,195 @@
         const passContent = document.getElementById('passContent');
         const errorContent = document.getElementById('errorContent');
 
-        function loadVisitorData() {
-            // Get REAL data from URL parameters (built by n8n)
+        // Load visitor data from URL params or API
+        async function loadVisitorData() {
+            // First, try to get data from URL parameters (from registration redirect)
             const visitorName = urlParams.get('name');
             const visitorPhone = urlParams.get('phone');
             const visitorEmail = urlParams.get('email');
-            const visitorPoints = parseInt(urlParams.get('points')) || 0;
-
-            const visitorData = {
-                name: visitorName,
-                phone: visitorPhone,
-                email: visitorEmail,
-                total_points: visitorPoints,
-                visit_count: 1
-            };
-
-            displayVisitorData(visitorData);
-        }
-                    
-                } else {
-                    throw new Error('Webhook returned error status: ' + response.status);
-                }
+            const visitorPoints = parseInt(urlParams.get('total_point') || urlParams.get('points') || '0');
+            
+            // If we have URL params, use them (faster, no API call needed)
+            if (visitorName && visitorId) {
+                const visitorData = {
+                    name: visitorName,
+                    phone: visitorPhone || 'Not provided',
+                    email: visitorEmail || 'Not provided',
+                    total_points: visitorPoints,
+                    visit_count: 1
+                };
                 
-                // Show pass content
+                displayVisitorData(visitorData);
                 loading.style.display = 'none';
                 passContent.style.display = 'block';
                 errorContent.style.display = 'none';
-                
-            } catch (error) {
-                console.error('Error loading visitor data:', error);
+                return;
+            }
+            
+            // If no URL params but we have visitor_id, fetch from API
+            if (visitorId) {
+                try {
+                    const response = await fetch(`${N8N_GET_VISITOR_URL}?visitor_id=${visitorId}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        displayVisitorData(data);
+                        loading.style.display = 'none';
+                        passContent.style.display = 'block';
+                        errorContent.style.display = 'none';
+                    } else {
+                        throw new Error('Visitor not found');
+                    }
+                } catch (error) {
+                    console.error('Error loading visitor data:', error);
+                    loading.style.display = 'none';
+                    errorContent.style.display = 'block';
+                    document.getElementById('errorMessage').textContent = 
+                        'Error loading pass data. Please try again or register first.';
+                }
+            } else {
+                // No visitor ID at all
                 loading.style.display = 'none';
                 errorContent.style.display = 'block';
                 document.getElementById('errorMessage').textContent = 
-                    'Error loading pass data: ' + error.message;
+                    'No visitor ID found. Please scan a vendor QR code to get your pass.';
             }
         }
 
         function displayVisitorData(data) {
             console.log('Displaying visitor data:', data);
             
-            // Update all display elements with REAL data
-            const visitorName = document.getElementById('visitorName');
-            const visitorPhone = document.getElementById('visitorPhone');
-            const visitorEmail = document.getElementById('visitorEmail');
-            const pointsCount = document.getElementById('pointsCount');
-            const visitCount = document.getElementById('visitCount');
-            const badge = document.getElementById('visitorBadge');
+            // Update all display elements with data
+            const visitorNameEl = document.getElementById('visitorName');
+            const visitorPhoneEl = document.getElementById('visitorPhone');
+            const visitorEmailEl = document.getElementById('visitorEmail');
+            const pointsCountEl = document.getElementById('pointsCount');
+            const visitCountEl = document.getElementById('visitCount');
+            const badgeEl = document.getElementById('visitorBadge');
 
-            if (visitorName) {
-                visitorName.innerHTML = data.name || 'Event Visitor';
+            if (visitorNameEl) {
+                visitorNameEl.innerHTML = (data.name || 'Event Visitor') + 
+                    (badgeEl ? badgeEl.outerHTML : '');
             }
             
-            if (visitorPhone) {
-                visitorPhone.textContent = data.phone || 'Not provided';
+            if (visitorPhoneEl) {
+                visitorPhoneEl.textContent = data.phone || 'Not provided';
             }
             
-            if (visitorEmail) {
-                visitorEmail.textContent = data.email || 'Not provided';
+            if (visitorEmailEl) {
+                visitorEmailEl.textContent = data.email || 'Not provided';
             }
             
-            if (pointsCount) {
-                pointsCount.textContent = data.total_points || data.points || 0;
+            const points = data.total_points || data.points || 0;
+            if (pointsCountEl) {
+                pointsCountEl.textContent = points;
             }
             
-            if (visitCount) {
-                visitCount.textContent = `${data.visit_count || 1} visits`;
+            if (visitCountEl) {
+                visitCountEl.textContent = `${data.visit_count || 1} visits`;
             }
 
             // Update badge based on points
-            if (badge) {
-                const points = data.total_points || data.points || 0;
+            if (badgeEl) {
                 if (points >= 100) {
-                    badge.textContent = 'VIP';
-                    badge.style.background = '#FFD700';
-                    badge.style.color = '#000';
+                    badgeEl.textContent = 'VIP';
+                    badgeEl.style.background = '#FFD700';
+                    badgeEl.style.color = '#000';
                 } else if (points >= 50) {
-                    badge.textContent = 'Regular';
-                    badge.style.background = '#6c757d';
-                    badge.style.color = 'white';
+                    badgeEl.textContent = 'Regular';
+                    badgeEl.style.background = '#6c757d';
+                    badgeEl.style.color = 'white';
                 } else if (points >= 10) {
-                    badge.textContent = 'Active';
-                    badge.style.background = '#28a745';
-                    badge.style.color = 'white';
+                    badgeEl.textContent = 'Active';
+                    badgeEl.style.background = '#28a745';
+                    badgeEl.style.color = 'white';
                 } else {
-                    badge.textContent = 'New';
-                    badge.style.background = '#17a2b8';
-                    badge.style.color = 'white';
+                    badgeEl.textContent = 'New';
+                    badgeEl.style.background = '#17a2b8';
+                    badgeEl.style.color = 'white';
                 }
             }
         }
 
-        // WhatsApp Button
-        document.getElementById('whatsappBtn').addEventListener('click', function() {
-            const whatsappUrl = `https://wa.me/60123456789?text=START`;
-            window.open(whatsappUrl, '_blank');
-            
-            if (visitorId) {
-                localStorage.setItem(`wa_opened_${visitorId}`, new Date().toISOString());
-            }
-            
-            this.innerHTML = '<span>✅</span> WhatsApp Opened!';
-            this.style.background = '#128C7E';
-            setTimeout(() => {
-                this.innerHTML = '<span>💬</span> Confirm Visit & Earn Points';
-                this.style.background = '';
-            }, 2000);
-        });
+        // WhatsApp Button Handler
+        const whatsappBtn = document.getElementById('whatsappBtn');
+        if (whatsappBtn) {
+            whatsappBtn.addEventListener('click', async function() {
+                // Get visitor phone or use default WhatsApp number
+                const visitorPhoneEl = document.getElementById('visitorPhone');
+                let phoneNumber = WHATSAPP_NUMBER;
+                
+                if (visitorPhoneEl && visitorPhoneEl.textContent !== 'Not provided') {
+                    // Extract phone number from display (remove formatting)
+                    const phoneText = visitorPhoneEl.textContent.replace(/\D/g, '');
+                    if (phoneText.length >= 10) {
+                        phoneNumber = phoneText;
+                    }
+                }
+                
+                const message = encodeURIComponent('START');
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+                
+                // Open WhatsApp
+                window.open(whatsappUrl, '_blank');
+                
+                // Track WhatsApp opening
+                if (visitorId) {
+                    try {
+                        await fetch(N8N_WHATSAPP_WEBHOOK, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                visitor_id: visitorId,
+                                action: 'whatsapp_opened',
+                                timestamp: new Date().toISOString()
+                            })
+                        });
+                    } catch (error) {
+                        console.log('Could not track WhatsApp opening:', error);
+                    }
+                    
+                    localStorage.setItem(`wa_opened_${visitorId}`, new Date().toISOString());
+                }
+                
+                // Update button state
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<span>✅</span> WhatsApp Opened!';
+                this.style.background = '#128C7E';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.style.background = '';
+                    this.disabled = false;
+                }, 3000);
+            });
+        }
 
-        // Scan Button
-        document.getElementById('scanBtn').addEventListener('click', function() {
-            if (visitorId) {
-                alert(`Ready to scan next booth! Your visitor ID: ${visitorId}\n\nThis will open your camera to scan booth QR codes.`);
-            } else {
-                alert('Please complete registration first');
-                window.location.href = 'visitor-register.html';
-            }
-        });
+        // Scan Button Handler
+        const scanBtn = document.getElementById('scanBtn');
+        if (scanBtn) {
+            scanBtn.addEventListener('click', function() {
+                if (visitorId) {
+                    // Redirect to registration page with scan mode
+                    window.location.href = `visitor-register.html?vendor_id=SCAN&visitor_id=${visitorId}`;
+                } else {
+                    alert('Please complete registration first');
+                    window.location.href = 'visitor-register.html';
+                }
+            });
+        }
 
-        // Auto-open WhatsApp for first vendor visit
+        // Auto-open WhatsApp for first vendor visit (if vendor_id is present)
         if (vendorId && visitorId && !localStorage.getItem(`wa_opened_${visitorId}`)) {
             setTimeout(() => {
-                const whatsappBtn = document.getElementById('whatsappBtn');
                 if (whatsappBtn) {
                     whatsappBtn.click();
                 }
-            }, 1500);
+            }, 2000);
         }
 
-        // Initialize
+        // Initialize page
         console.log('Initializing pass page with visitorId:', visitorId);
         if (visitorId) {
             loadVisitorData();
