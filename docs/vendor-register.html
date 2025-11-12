@@ -242,7 +242,33 @@
         // Helper: clear field errors
         function clearFieldErrors() {
             messageContainer.innerHTML = '';
-            form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            form.querySelectorAll('.field-error').forEach(el => {
+                el.classList.remove('field-error');
+                if (el.dataset?.originalPlaceholder) {
+                    el.placeholder = el.dataset.originalPlaceholder;
+                }
+            });
+        }
+
+        function handleDuplicateFields(fields = []) {
+            fields.forEach(fieldName => {
+                const fieldMap = {
+                    email: document.getElementById('emailAddress'),
+                    vendor_name: document.getElementById('vendorName')
+                };
+                const field = fieldMap[fieldName];
+                if (field) {
+                    if (!field.dataset.originalPlaceholder) {
+                        field.dataset.originalPlaceholder = field.placeholder || '';
+                    }
+                    field.value = '';
+                    field.classList.add('field-error');
+                    field.placeholder = fieldName === 'email'
+                        ? 'Email already registered'
+                        : 'Vendor name already registered';
+                    field.focus();
+                }
+            });
         }
         
         // Format phone as user types
@@ -317,8 +343,10 @@
             
             // Update UI
             loadingIndicator.classList.remove('hidden');
+            const originalBtnText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
+            let registrationSucceeded = false;
             
             try {
                 const response = await fetch(WEBHOOK_URL, {
@@ -329,9 +357,20 @@
                 
                 const result = await response.json().catch(() => ({}));
                 
-                if (response.ok && result.success !== false) {
-                    showSuccess('✅ Vendor registered successfully!');
-                    form.reset();
+                if (response.ok) {
+                    if (result.success === false) {
+                        const errorMsg = result.message || 'Vendor registration failed.';
+                        if (Array.isArray(result.duplicate_fields) && result.duplicate_fields.length > 0) {
+                            handleDuplicateFields(result.duplicate_fields);
+                        }
+                        showError(errorMsg);
+                    } else {
+                        registrationSucceeded = true;
+                        showSuccess('✅ Vendor registered successfully!');
+                        form.reset();
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Vendor Registered';
+                    }
                 } else {
                     const errorMsg = result.message || 'Vendor registration failed. Please try again.';
                     showError(errorMsg);
@@ -341,8 +380,10 @@
                 showError('Network error. Please check your connection and try again.');
             } finally {
                 loadingIndicator.classList.add('hidden');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Register Vendor';
+                if (!registrationSucceeded) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
             }
         });
     </script>
