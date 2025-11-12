@@ -143,13 +143,23 @@
     
     <form id="vendorForm">
         <div class="form-group">
-            <label for="companyName">Company Name *</label>
-            <input type="text" id="companyName" name="company_name" required placeholder="Enter company name">
+            <label for="vendorName">Vendor Name *</label>
+            <input type="text" id="vendorName" name="vendor_name" required placeholder="Enter vendor name">
         </div>
         
         <div class="form-group">
-            <label for="boothNumber">Booth Number *</label>
-            <input type="text" id="boothNumber" name="booth_number" required placeholder="e.g. B12">
+            <label for="businessType">Business Type *</label>
+            <select id="businessType" name="business_type" required>
+                <option value="" disabled selected>Select business type</option>
+                <option value="Retail">Retail</option>
+                <option value="Fashion">Fashion</option>
+                <option value="F&B">F&amp;B</option>
+                <option value="Health">Health</option>
+                <option value="Technology">Technology</option>
+                <option value="Education">Education</option>
+                <option value="Professional Services">Professional Services</option>
+                <option value="Beauty">Beauty</option>
+            </select>
         </div>
         
         <div class="form-group">
@@ -265,12 +275,12 @@
             // Validation
             let hasError = false;
             
-            if (!data.company_name?.trim()) {
-                document.getElementById('companyName').classList.add('field-error');
+            if (!data.vendor_name?.trim()) {
+                document.getElementById('vendorName').classList.add('field-error');
                 hasError = true;
             }
-            if (!data.booth_number?.trim()) {
-                document.getElementById('boothNumber').classList.add('field-error');
+            if (!data.business_type) {
+                document.getElementById('businessType').classList.add('field-error');
                 hasError = true;
             }
             if (!data.contact_person?.trim()) {
@@ -291,11 +301,6 @@
                 showError('Please enter a valid email address.');
                 hasError = true;
             }
-            if (data.company_website && !/^(https?:\/\/)/i.test(data.company_website)) {
-                document.getElementById('companyWebsite').classList.add('field-error');
-                showError('Company website should start with http:// or https://');
-                hasError = true;
-            }
             
             if (hasError) {
                 return;
@@ -303,6 +308,12 @@
             
             // Normalize phone
             data.contact_phone = normalizePhone(data.contact_phone);
+            if (data.company_website) {
+                data.company_website = data.company_website.trim();
+                if (data.company_website !== '' && !/^https?:\/\//i.test(data.company_website)) {
+                    data.company_website = `https://${data.company_website}`;
+                }
+            }
             
             // Update UI
             loadingIndicator.classList.remove('hidden');
