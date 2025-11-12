@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Registration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 24px 18px 48px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+        
+        button {
+            background: #25D366;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            margin: 10px 0 18px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            margin: 10px 0 18px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .field-error {
+            border: 2px solid #ff4444 !important;
+            background-color: #fff9f9 !important;
+        }
+        
+        .field-error:focus {
+            outline: none;
+            border-color: #ff4444 !important;
+            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 14px 32px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>🏢 Vendor Registration</h2>
+    
+    <div id="messageContainer"></div>
+    
+    <form id="vendorForm">
+        <div class="form-group">
+            <label for="companyName">Company Name *</label>
+            <input type="text" id="companyName" name="company_name" required placeholder="Enter company name">
+        </div>
+        
+        <div class="form-group">
+            <label for="boothNumber">Booth Number *</label>
+            <input type="text" id="boothNumber" name="booth_number" required placeholder="e.g. B12">
+        </div>
+        
+        <div class="form-group">
+            <label for="contactPerson">Contact Person *</label>
+            <input type="text" id="contactPerson" name="contact_person" required placeholder="Full name of contact person">
+        </div>
+        
+        <div class="form-group">
+            <label for="designation">Designation *</label>
+            <select id="designation" name="designation" required>
+                <option value="" disabled selected>Select designation</option>
+                <option value="Owner">Owner</option>
+                <option value="Manager">Manager</option>
+                <option value="Senior Admin">Senior Admin</option>
+                <option value="Staff">Staff</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="contactPhone">Contact Phone *</label>
+            <input type="tel" id="contactPhone" name="contact_phone" required placeholder="e.g. 012-345-6789">
+        </div>
+        
+        <div class="form-group">
+            <label for="emailAddress">Email Address *</label>
+            <input type="email" id="emailAddress" name="email" required placeholder="contact@company.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="companyWebsite">Company Website</label>
+            <input type="url" id="companyWebsite" name="company_website" placeholder="https://example.com">
+        </div>
+        
+        <button type="submit" id="submitBtn">Register Vendor</button>
+    </form>
+    
+    <div id="loading" class="hidden loading">⏳ Submitting vendor details...</div>
+
+    <script>
+        const WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook/vendor-register';
+        
+        const form = document.getElementById('vendorForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingIndicator = document.getElementById('loading');
+        const messageContainer = document.getElementById('messageContainer');
+        
+        // Helper: show success message
+        function showSuccess(message) {
+            messageContainer.innerHTML = '';
+            const success = document.createElement('div');
+            success.className = 'success-message';
+            success.textContent = message;
+            messageContainer.appendChild(success);
+        }
+        
+        // Helper: show error message
+        function showError(message) {
+            messageContainer.innerHTML = '';
+            const error = document.createElement('div');
+            error.className = 'error-message';
+            error.textContent = message;
+            messageContainer.appendChild(error);
+        }
+        
+        // Helper: basic email validation
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        
+        // Helper: basic phone validation (strip non-digits, check length)
+        function normalizePhone(phone) {
+            return phone.replace(/\D/g, '');
+        }
+        
+        function isValidPhone(phone) {
+            const digits = normalizePhone(phone);
+            return digits.length >= 10 && digits.length <= 15;
+        }
+        
+        // Helper: clear field errors
+        function clearFieldErrors() {
+            messageContainer.innerHTML = '';
+            form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+        }
+        
+        // Format phone as user types
+        const phoneInput = document.getElementById('contactPhone');
+        phoneInput.addEventListener('input', function(e) {
+            const cursor = e.target.selectionStart;
+            const digits = normalizePhone(e.target.value);
+            
+            let formatted = digits;
+            if (digits.length > 3 && digits.length <= 7) {
+                formatted = digits.slice(0, 3) + '-' + digits.slice(3);
+            } else if (digits.length > 7) {
+                formatted = digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+            }
+            
+            e.target.value = formatted;
+            e.target.setSelectionRange(cursor, cursor);
+        });
+        
+        // Remove error state on input
+        form.querySelectorAll('input, select').forEach(el => el.addEventListener('input', () => el.classList.remove('field-error')));
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearFieldErrors();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Validation
+            let hasError = false;
+            
+            if (!data.company_name?.trim()) {
+                document.getElementById('companyName').classList.add('field-error');
+                hasError = true;
+            }
+            if (!data.booth_number?.trim()) {
+                document.getElementById('boothNumber').classList.add('field-error');
+                hasError = true;
+            }
+            if (!data.contact_person?.trim()) {
+                document.getElementById('contactPerson').classList.add('field-error');
+                hasError = true;
+            }
+            if (!data.designation) {
+                document.getElementById('designation').classList.add('field-error');
+                hasError = true;
+            }
+            if (!isValidPhone(data.contact_phone || '')) {
+                document.getElementById('contactPhone').classList.add('field-error');
+                showError('Please enter a valid contact phone number (10-15 digits).');
+                hasError = true;
+            }
+            if (!isValidEmail(data.email || '')) {
+                document.getElementById('emailAddress').classList.add('field-error');
+                showError('Please enter a valid email address.');
+                hasError = true;
+            }
+            if (data.company_website && !/^(https?:\/\/)/i.test(data.company_website)) {
+                document.getElementById('companyWebsite').classList.add('field-error');
+                showError('Company website should start with http:// or https://');
+                hasError = true;
+            }
+            
+            if (hasError) {
+                return;
+            }
+            
+            // Normalize phone
+            data.contact_phone = normalizePhone(data.contact_phone);
+            
+            // Update UI
+            loadingIndicator.classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json().catch(() => ({}));
+                
+                if (response.ok && result.success !== false) {
+                    showSuccess('✅ Vendor registered successfully!');
+                    form.reset();
+                } else {
+                    const errorMsg = result.message || 'Vendor registration failed. Please try again.';
+                    showError(errorMsg);
+                }
+            } catch (err) {
+                console.error(err);
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register Vendor';
+            }
+        });
+    </script>
+</body>
+</html>
