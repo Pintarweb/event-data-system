@@ -1,0 +1,224 @@
+{
+  "name": "WhatsApp Listener",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/whatsapp-incoming",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "5dfd62f8-0ce0-4d08-a105-e702ecf7cc0c",
+      "name": "Webhook",
+      "webhookId": "96710fb6-c00b-43c2-ac07-36cdbdba4c36"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process WhatsApp webhook from Meta\nconst body = $input.first().json.body;\n\n// Extract message details\nconst entry = body.entry?.[0];\nconst changes = entry?.changes?.[0];\nconst value = changes?.value;\nconst message = value?.messages?.[0];\nconst contact = value?.contacts?.[0];\n\n// Extract basic info\nconst phone = contact?.wa_id;\nconst messageText = message?.text?.body;\nconst messageType = message?.type;\n\n// Return data in correct n8n format\nreturn [\n  {\n    json: {\n      phone: phone,\n      message: messageText,\n      message_type: messageType,\n      is_start_message: messageText?.toUpperCase() === 'START',\n      lookup_phone: phone,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "0470f6c7-639f-4943-bf52-fc0d14e4c54c",
+      "name": "Whatsapp Processor"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "condition": "eq",
+              "keyValue": "={{ $json.lookup_phone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "3f357ffb-6173-43d2-bc5d-a725e2793f01",
+      "name": "Supabase Visitors",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from both nodes\nconst whatsappData = $('Whatsapp Processor').first().json;  // From Whatsapp Processor\nconst supabaseData = $input.first().json || {};  // From Supabase Visitors\n\n// Determine the route\nlet route = '';\nif (!supabaseData.id) {\n  route = 'new_visitor';\n} else if (whatsappData.message === 'START') {\n  route = 'start_message'; \n} else {\n  route = 'other_message';\n}\n\nreturn [\n  {\n    json: {\n      route: route,\n      phone: whatsappData.phone,\n      message: whatsappData.message,\n      visitor_id: supabaseData.id,\n      visitor_exists: !!supabaseData.id,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "2794b8a1-f787-41bf-92ab-0987627d3a75",
+      "name": "Routing Check"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": " new_visitor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0c4906f1-97ea-435d-aacb-d49137b1cfb9"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Visitor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0e2ab424-b7fd-463a-b61c-d4f14d3e891c",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": " start_message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "START Message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7c8096f8-46ee-4a41-b93d-2c6651870245",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "other_message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Other Messages"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        896,
+        -32
+      ],
+      "id": "5ab70d10-20ff-4918-a38d-c84df31133b1",
+      "name": "Routing Output"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Whatsapp Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whatsapp Processor": {
+      "main": [
+        [
+          {
+            "node": "Supabase Visitors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Visitors": {
+      "main": [
+        [
+          {
+            "node": "Routing Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing Check": {
+      "main": [
+        [
+          {
+            "node": "Routing Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "63b94f32-c9c8-4344-a52d-ef7310ea4e09",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e3c747618bb4eb47bfb3d23d87a9d45315b912b1a05e4503bdf9b19a5155ed0"
+  },
+  "id": "tt3nbct7Jcfe3wNq",
+  "tags": []
+}

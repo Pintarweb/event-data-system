@@ -1,0 +1,126 @@
+{
+  "name": "Get Visitor Points",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/api/visitor-points",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3cc3b818-7ac5-46ca-8d4a-80480f34f4f4",
+      "name": "Webhook",
+      "webhookId": "27c20cd0-bd95-4365-82c3-2eb4df3f78a1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.visitor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a0a7972e-ccc7-4378-9c7c-ed5b6f5c7d58",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"visitor_id\": \"{{ $json.id }}\",\n  \"name\": \"{{ $json.name }}\",\n  \"points\": {{ $json.total_points }},\n  \"pass_url\": \"{{ $json.pass_url }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "e6d9c5c9-eb42-4289-9f06-0a8b73293093",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple and reliable - use query parameters\nconst visitorId = $input.first().json.query.visitor_id;\n\nconsole.log('Query parameters:', $input.query);\nconsole.log('Visitor ID:', visitorId);\n\nif (!visitorId) {\n    return [\n        {\n            json: {\n                error: \"Missing visitor_id parameter\",\n                example_url: \"https://n8n.pintarweb.com/webhook/xxx/api/visitor-points?visitor_id=UUID_HERE\"\n            }\n        }\n    ];\n}\n\nreturn [\n    {\n        json: {\n            visitor_id: visitorId,\n            timestamp: new Date().toISOString()\n        }\n    }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "71b76f82-4de5-4c5d-bc8d-7fb8b3052d63",
+      "name": "Extract Visitor ID"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Visitor ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Visitor ID": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d586d200-b4ed-491c-ab72-28a42138a9b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e3c747618bb4eb47bfb3d23d87a9d45315b912b1a05e4503bdf9b19a5155ed0"
+  },
+  "id": "3qpCwVqF1UYGJhtH",
+  "tags": []
+}
