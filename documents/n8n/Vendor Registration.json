@@ -1,0 +1,316 @@
+{
+  "name": "Vendor Registration",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "b6c506d9-3c9f-4c0e-9d7e-1d2fb03c9c6e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/vendor-register",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "webhookId": "a4fe1e78-7c8c-4b7e-9e9f-3a7b8ebc0f51"
+    },
+    {
+      "id": "e2c4b421-7c42-4c45-8a5a-5e8e4f11f1ec",
+      "name": "Process Form Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        200
+      ],
+      "parameters": {
+        "jsCode": "// Extract form data\nconst body = $input.first().json.body || {};\n\nconst vendor = {\n  vendor_name: (body.vendor_name || '').trim(),\n  business_type: (body.business_type || '').trim(),\n  contact_person: (body.contact_person || '').trim(),\n  designation: (body.designation || '').trim(),\n  contact_phone: (body.contact_phone || '').replace(/\\\\D/g, ''),\n  email: (body.email || '').trim(),\n  company_website: (body.company_website || '').trim(),\n  created_at: new Date().toISOString()\n};\n\nif (vendor.company_website && !/^https?:\\\/\\\//i.test(vendor.company_website)) {\n  vendor.company_website = `https://${vendor.company_website}`;\n}\n\nreturn [{ json: vendor }];"
+      }
+    },
+    {
+      "id": "91325e71-0c61-4e67-b6c5-4d6c2ac21564",
+      "name": "Create Vendor",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        640,
+        200
+      ],
+      "parameters": {
+        "operation": "create",
+        "tableId": "vendors",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "vendor_name", "fieldValue": "={{ $json.vendor_name }}" },
+            { "fieldId": "business_type", "fieldValue": "={{ $json.business_type }}" },
+            { "fieldId": "contact_person", "fieldValue": "={{ $json.contact_person }}" },
+            { "fieldId": "designation", "fieldValue": "={{ $json.designation }}" },
+            { "fieldId": "contact_phone", "fieldValue": "={{ $json.contact_phone }}" },
+            { "fieldId": "email", "fieldValue": "={{ $json.email }}" },
+            { "fieldId": "company_website", "fieldValue": "={{ $json.company_website }}" },
+            { "fieldId": "created_at", "fieldValue": "={{ $json.created_at }}" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8b2f1c9d-7e5b-4e3d-9f2e-80ccfb866c07",
+      "name": "Has Error",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        860,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.error }}",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c51ca1e9-6a29-4588-91d1-8d2f7ab3b1b9",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        80
+      ],
+      "parameters": {
+        "jsCode": "const errorPayload = $input.first().json || {};\nconst vendor = $items('Process Form Data')[0]?.json || {};\n\nconst errorText = (errorPayload.error || errorPayload.message || '').toString();\nconst lower = errorText.toLowerCase();\n\nconst duplicateFields = [];\nif (lower.includes('vendor_name')) duplicateFields.push('vendor_name');\nif (lower.includes('email')) duplicateFields.push('email');\nif (lower.includes('duplicate') && duplicateFields.length === 0) {\n  duplicateFields.push('email');\n}\n\nconst isDuplicate = duplicateFields.length > 0;\n\nlet message = 'Vendor registration failed.';\nif (isDuplicate) {\n  if (duplicateFields.length === 2) {\n    message = 'Vendor name and email are already registered.';\n  } else if (duplicateFields.includes('vendor_name')) {\n    message = 'Vendor name is already registered.';\n  } else if (duplicateFields.includes('email')) {\n    message = 'Email is already registered.';\n  } else {\n    message = 'Vendor already registered.';\n  }\n}\n\nreturn [{
+  json: {
+    duplicate: isDuplicate,
+    error: message,
+    duplicate_fields: duplicateFields,
+    raw_error: errorText,
+    vendor_name: vendor.vendor_name || errorPayload.vendor_name || '',
+    email: vendor.email || errorPayload.email || ''
+  }
+}];"
+      }
+    },
+    {
+      "id": "c71b9a3b-1134-4456-ae7f-264d096b4bfb",
+      "name": "Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.duplicate }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "isTrue"
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "af28af12-784f-4f84-b814-7f9a5d8b6a93",
+      "name": "Respond Duplicate",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1500,
+        -40
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": {{ $json.error }},\n  \"duplicate_fields\": {{ $json.duplicate_fields || [] }},\n  \"vendor_name\": \"{{ $json.vendor_name }}\",\n  \"email\": \"{{ $json.email }}\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      }
+    },
+    {
+      "id": "f4c1b2e5-46b6-4938-8ebe-9a8fdf8c6c53",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1500,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": {{ $json.error || \"Vendor registration failed\" }},\n  \"details\": {{ $json.raw_error || '' }}\n}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "f6c0d34a-6cf4-44f5-87a6-535eaeb6a4f7",
+      "name": "Prepare Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        360
+      ],
+      "parameters": {
+        "jsCode": "const createResult = $input.first().json || {};\nconst vendorInput = $items('Process Form Data')[0]?.json || {};\n\nconst data = Array.isArray(createResult.data)
+  ? createResult.data[0]
+  : (Array.isArray(createResult)
+      ? createResult[0]
+      : createResult.data || createResult);
+\nreturn [{
+  json: {
+    success: true,
+    message: 'Vendor registered successfully',
+    vendor_id: data?.vendor_id || data?.id || null,
+    vendor_name: data?.vendor_name || vendorInput.vendor_name
+  }
+}];"
+      }
+    },
+    {
+      "id": "73e1747c-0ba6-4ca8-a96a-af3e03045af3",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1280,
+        360
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Form Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Form Data": {
+      "main": [
+        [
+          {
+            "node": "Create Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Vendor": {
+      "main": [
+        [
+          {
+            "node": "Has Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Error": {
+      "main": [
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Error": {
+      "main": [
+        [
+          {
+            "node": "Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Respond Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Success": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
+

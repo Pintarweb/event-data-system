@@ -1,0 +1,319 @@
+{
+  "name": "Visitor Registration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/visitor-register",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -32
+      ],
+      "id": "878c0da2-f7dd-4698-974e-b13861ec56ac",
+      "name": "Webhook",
+      "webhookId": "370b3c9b-dd00-4113-9b2a-b0775ab1cccb"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract form data from POST request\nconst { name, phone, email, vendor_id } = $input.first().json.body;\n\n\n// Return data for Supabase insertion\nreturn [\n  {\n    json: {\n      // For Supabase insertion (Supabase will generate the UUID)\n      name: name,\n      phone: phone,\n      email: email || '',\n      total_points: 1,\n      \n      // For workflow reference\n      vendor_id: vendor_id,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "85f59058-d581-4ad6-bee8-e16ab23a75fb",
+      "name": "Process Form Data1"
+    },
+    {
+      "parameters": {
+        "tableId": "visitors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "total_points",
+              "fieldValue": "={{ $json.total_points }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "fbf1d6b3-6982-4653-bbfd-b8fcba6071ce",
+      "name": "Create New Visitor",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node AFTER Supabase Insert\nconst supabaseResult = $input.first().json;  // The created visitor record\nconst realVisitorId = supabaseResult.id;\nconst realVisitorName = supabaseResult.name;\nconst realPassUrl = `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${realVisitorId}`;\n\n// Return both the response AND the update data\nreturn [\n  {\n    json: {\n      // For the web response\n      success: true,\n      visitor_id: realVisitorId,\n      pass_url: realPassUrl,\n      visitor_name: realVisitorName\n      \n      // For the Supabase update\n      // update_visitor_id: realVisitorId,\n      // update_pass_url: realPassUrl\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        64
+      ],
+      "id": "a2f0f638-9d6b-4e88-aa06-7ecd56c7fa5a",
+      "name": "Adding Visitor ID"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.visitor_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "pass_url",
+              "fieldValue": "={{ $json.pass_url }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        64
+      ],
+      "id": "bd841c31-da93-43b5-8581-76f3adf14661",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// First, check what type of duplicate we have\nconst error = $input.first().json.error;\nconst originalData = $input.first().json.data; // Your original form data\n\nconsole.log('Full error:', error);\n\nlet errorType = 'duplicate_unknown';\nlet message = 'This information is already registered';\nlet duplicateFields = [];\n\n// Check for BOTH duplicates simultaneously\nconst hasPhoneDuplicate = error.includes('unique_visitor_phone');\nconst hasEmailDuplicate = error.includes('unique_visitor_email');\n\nif (hasPhoneDuplicate && hasEmailDuplicate) {\n  errorType = 'duplicate_both';\n  message = 'Both phone number and email are already registered';\n  duplicateFields = ['phone', 'email'];\n} else if (hasPhoneDuplicate) {\n  errorType = 'duplicate_phone';\n  message = 'This phone number is already registered';\n  duplicateFields = ['phone'];\n} else if (hasEmailDuplicate) {\n  errorType = 'duplicate_email';\n  message = 'This email address is already registered';\n  duplicateFields = ['email'];\n} else {\n  // Fallback if we can't determine the specific constraint\n  errorType = 'duplicate_both';\n  message = 'Contact information is already registered';\n  duplicateFields = ['phone', 'email'];\n}\n\nreturn [{\n  json: {\n    success: false,\n    error: errorType,\n    message: message,\n    duplicate_fields: duplicateFields,\n    error_details: error,\n    existing_visitor: {\n      name: \"Existing Visitor\",\n      visitor_id: null\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "4885b205-f9b6-495a-b1f6-74d4883de5aa",
+      "name": "Checking Error"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"visitor_id\": \"{{ $json.id }}\",\n  \"pass_url\": \"https://pintarweb.github.io/event-data-system/pass.html?visitor_id={{ $json.id }}&name={{ $json.name }}&phone={{ $json.phone }}&email={{ $json.email }}&total_point={{ $json.total_points }}\",\n  \"message\": \"Registration successful!\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        64
+      ],
+      "id": "b7c9f8db-66e4-4374-a06f-bf00fcb2bfb2",
+      "name": "Success Register Visitor"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        -128
+      ],
+      "id": "233b90ad-684d-4748-9067-ae2ce2964d1f",
+      "name": "Duplicate Error Retry"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76a182f1-32e6-4952-a2ed-74e6a4e2fac0",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "duplicate key",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "1cb68849-2719-4298-be0f-bfc38f626996",
+      "name": "Check if Duplicate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Form Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Form Data1": {
+      "main": [
+        [
+          {
+            "node": "Create New Visitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create New Visitor": {
+      "main": [
+        [
+          {
+            "node": "Check if Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Adding Visitor ID": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Success Register Visitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checking Error": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Error Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Checking Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Adding Visitor ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "510168db-ce85-4104-b2a8-a6bac12346cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e3c747618bb4eb47bfb3d23d87a9d45315b912b1a05e4503bdf9b19a5155ed0"
+  },
+  "id": "s2bgj9CRFxRYYGXh",
+  "tags": []
+}
