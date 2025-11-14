@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Registration Duplicate Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #25D366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #128C7E;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+        }
+        .info {
+            background: #e7f3ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vendor Registration Duplicate Detection Test</h1>
+    <p>This test simulates duplicate detection responses to verify the vendor-register.html logic works correctly.</p>
+
+    <div class="test-section">
+        <h3>Test 1: Duplicate Phone Detection</h3>
+        <p>Simulates a response where phone number is already registered.</p>
+        <button onclick="testDuplicatePhone()">Test Duplicate Phone</button>
+        <div id="result1" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Duplicate Email Detection</h3>
+        <p>Simulates a response where email is already registered.</p>
+        <button onclick="testDuplicateEmail()">Test Duplicate Email</button>
+        <div id="result2" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Duplicate Both (Phone + Email)</h3>
+        <p>Simulates a response where both phone and email are already registered.</p>
+        <button onclick="testDuplicateBoth()">Test Duplicate Both</button>
+        <div id="result3" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Success Response</h3>
+        <p>Simulates a successful registration to verify button state.</p>
+        <button onclick="testSuccess()">Test Success</button>
+        <div id="result4" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        // Simulate the response handling logic from vendor-register.html
+        function simulateResponse(result, testId) {
+            const resultDiv = document.getElementById(testId);
+            resultDiv.style.display = 'block';
+            
+            let output = '<strong>Response:</strong><br>';
+            output += '<pre>' + JSON.stringify(result, null, 2) + '</pre><br>';
+            
+            if (result.success === false) {
+                let errorMessage = result.message || 'Vendor registration failed';
+                let fieldsHandled = [];
+                
+                if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
+                    errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
+                    fieldsHandled = ['contact_phone'];
+                }
+                else if (result.error === "duplicate_email") {
+                    errorMessage = "📧 This email address is already registered. Please enter a different email address.";
+                    fieldsHandled = ['email'];
+                }
+                else if (result.error === "duplicate_both") {
+                    errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
+                    fieldsHandled = ['contact_phone', 'email'];
+                }
+                else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                    fieldsHandled = result.duplicate_fields;
+                }
+                
+                output += '<div class="error"><strong>Error Detected:</strong><br>';
+                output += 'Error Type: ' + result.error + '<br>';
+                output += 'Message: ' + errorMessage + '<br>';
+                output += 'Fields to clear: ' + fieldsHandled.join(', ') + '<br>';
+                output += 'Button should: Reset to original text (NOT "Vendor Registered")<br>';
+                output += 'Form should: Show error message, clear duplicate fields, highlight fields</div>';
+                
+                resultDiv.className = 'result error';
+            } else {
+                output += '<div class="success"><strong>Success:</strong><br>';
+                output += 'Registration successful!<br>';
+                output += 'Button should: Reset to original text (NOT "Vendor Registered")<br>';
+                output += 'Form should: Show success message, reset form</div>';
+                
+                resultDiv.className = 'result success';
+            }
+            
+            resultDiv.innerHTML = output;
+        }
+
+        function testDuplicatePhone() {
+            const mockResponse = {
+                success: false,
+                error: "duplicate_phone",
+                message: "This phone number is already registered",
+                duplicate_fields: ["contact_phone"]
+            };
+            simulateResponse(mockResponse, 'result1');
+        }
+
+        function testDuplicateEmail() {
+            const mockResponse = {
+                success: false,
+                error: "duplicate_email",
+                message: "This email address is already registered",
+                duplicate_fields: ["email"]
+            };
+            simulateResponse(mockResponse, 'result2');
+        }
+
+        function testDuplicateBoth() {
+            const mockResponse = {
+                success: false,
+                error: "duplicate_both",
+                message: "Both phone number and email are already registered",
+                duplicate_fields: ["contact_phone", "email"]
+            };
+            simulateResponse(mockResponse, 'result3');
+        }
+
+        function testSuccess() {
+            const mockResponse = {
+                success: true,
+                message: "Vendor registered successfully",
+                vendor_id: "test-vendor-id-123"
+            };
+            simulateResponse(mockResponse, 'result4');
+        }
+    </script>
+</body>
+</html>
+

@@ -374,38 +374,53 @@
                 const result = await response.json().catch(() => ({}));
                 
                 if (response.ok) {
-                if (result.success === false) {
-                    // Prefer explicit error codes (mirror visitor-register.html behavior)
-                    let errorMsg = result.message || 'Vendor registration failed.';
-
-                    if (result.error === 'duplicate_email') {
-                        errorMsg = '📧 This email address is already registered. Please enter a different email address.';
-                        handleDuplicateFields(['email']);
-                    } else if (result.error === 'duplicate_phone' || result.error === 'duplicate_contact_phone') {
-                        errorMsg = '📱 This phone number is already registered. Please enter a different number.';
-                        handleDuplicateFields(['contact_phone']);
-                    } else if (result.error === 'duplicate_name' || result.error === 'duplicate_vendor_name') {
-                        errorMsg = '🏷️ This vendor name is already registered. Please enter a different vendor name.';
-                        handleDuplicateFields(['vendor_name']);
-                    } else if (result.error === 'duplicate_both') {
-                        errorMsg = '📧📱 Both phone number and email are already registered. Please use different contact information.';
-                        handleDuplicateFields(['contact_phone', 'email']);
-                    } else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                        // Fallback: use duplicate_fields array if available
-                        handleDuplicateFields(result.duplicate_fields);
+                    // Handle duplicate errors (mirror visitor-register.html behavior)
+                    if (result.success === false) {
+                        let errorMessage = result.message || 'Vendor registration failed';
+                        
+                        // Handle all duplicate conditions
+                        if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
+                            errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
+                            handleDuplicateFields(['contact_phone']);
+                        }
+                        else if (result.error === "duplicate_email") {
+                            errorMessage = "📧 This email address is already registered. Please enter a different email address.";
+                            handleDuplicateFields(['email']);
+                        }
+                        else if (result.error === "duplicate_both") {
+                            errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
+                            handleDuplicateFields(['contact_phone', 'email']);
+                        }
+                        else if (result.error === "duplicate_name" || result.error === "duplicate_vendor_name") {
+                            errorMessage = "🏷️ This vendor name is already registered. Please enter a different vendor name.";
+                            handleDuplicateFields(['vendor_name']);
+                        }
+                        else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                            // Fallback: use duplicate_fields array if available
+                            handleDuplicateFields(result.duplicate_fields);
+                        }
+                        
+                        showError(errorMessage);
+                        loadingIndicator.classList.add('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                        return;
                     }
-
-                    showError(errorMsg);
+                    
+                    // SUCCESS - show message and reset form
+                    registrationSucceeded = true;
+                    showSuccess('✅ Vendor registered successfully!');
+                    form.reset();
+                    loadingIndicator.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
                 } else {
-                        registrationSucceeded = true;
-                        showSuccess('✅ Vendor registered successfully!');
-                        form.reset();
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'Vendor Registered';
-                    }
-                } else {
-                    const errorMsg = result.message || 'Vendor registration failed. Please try again.';
+                    // Handle HTTP errors
+                    const errorMsg = result.message || 'Vendor registration failed. Please check your information and try again.';
                     showError(errorMsg);
+                    loadingIndicator.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
                 }
             } catch (err) {
                 console.error(err);
