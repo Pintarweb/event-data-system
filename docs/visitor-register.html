@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             padding: 20px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -130,6 +130,152 @@
             color: #666;
             margin-top: 4px;
         }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+        
+        select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .radio-option, .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+        
+        .radio-option:hover, .checkbox-option:hover {
+            border-color: #25D366;
+            background-color: #f0fdf4;
+        }
+        
+        .radio-option input[type="radio"],
+        .checkbox-option input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .radio-option input[type="radio"]:checked + label,
+        .checkbox-option input[type="checkbox"]:checked + label {
+            font-weight: 600;
+            color: #25D366;
+        }
+        
+        .radio-option:has(input[type="radio"]:checked),
+        .checkbox-option:has(input[type="checkbox"]:checked) {
+            border-color: #25D366;
+            background-color: #f0fdf4;
+        }
+        
+        .radio-option label,
+        .checkbox-option label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .multi-select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        
+        .consent-section {
+            background-color: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .consent-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .consent-section ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .consent-section li {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        .consent-checkbox {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .consent-checkbox input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        
+        .consent-checkbox label {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+        
+        .others-specify {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .others-specify.show {
+            display: block;
+        }
+        
+        .others-specify input {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -159,6 +305,186 @@
                    placeholder="your.email@example.com">
         </div>
         
+        <div class="form-group">
+            <label>Gender *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="gender" id="genderMale" value="Male" required>
+                    <label for="genderMale">Male</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="gender" id="genderFemale" value="Female" required>
+                    <label for="genderFemale">Female</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="gender" id="genderPreferNot" value="Prefer Not to Say" required>
+                    <label for="genderPreferNot">Prefer Not to Say</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Age Group *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="ageLess18" value="less than 18 years" required>
+                    <label for="ageLess18">Less than 18 years</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="age18_24" value="18-24 years" required>
+                    <label for="age18_24">18-24 years</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="age25_34" value="25-34 years" required>
+                    <label for="age25_34">25-34 years</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="age35_44" value="35-44 years" required>
+                    <label for="age35_44">35-44 years</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="age45_54" value="45-54 years" required>
+                    <label for="age45_54">45-54 years</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="age_group" id="ageMore55" value="more than 55 years" required>
+                    <label for="ageMore55">More than 55 years</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="countryField">Country of Origin *</label>
+            <select name="country" id="countryField" required>
+                <option value="Malaysia" selected>Malaysia</option>
+                <option value="Singapore">Singapore</option>
+                <option value="Thailand">Thailand</option>
+                <option value="Indonesia">Indonesia</option>
+                <option value="Brunei">Brunei</option>
+                <option value="Philippines">Philippines</option>
+                <option value="Vietnam">Vietnam</option>
+                <option value="Myanmar">Myanmar</option>
+                <option value="Cambodia">Cambodia</option>
+                <option value="Laos">Laos</option>
+                <option value="China">China</option>
+                <option value="India">India</option>
+                <option value="Bangladesh">Bangladesh</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Sri Lanka">Sri Lanka</option>
+                <option value="Japan">Japan</option>
+                <option value="South Korea">South Korea</option>
+                <option value="Australia">Australia</option>
+                <option value="New Zealand">New Zealand</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="United States">United States</option>
+                <option value="Canada">Canada</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="stateField">State of Origin *</label>
+            <select name="state" id="stateField" required>
+                <option value="">Select state</option>
+                <option value="Johor">Johor</option>
+                <option value="Kedah">Kedah</option>
+                <option value="Kelantan">Kelantan</option>
+                <option value="Melaka">Melaka</option>
+                <option value="Negeri Sembilan">Negeri Sembilan</option>
+                <option value="Pahang">Pahang</option>
+                <option value="Perak">Perak</option>
+                <option value="Perlis">Perlis</option>
+                <option value="Pulau Pinang">Pulau Pinang</option>
+                <option value="Sabah">Sabah</option>
+                <option value="Sarawak">Sarawak</option>
+                <option value="Selangor">Selangor</option>
+                <option value="Terengganu">Terengganu</option>
+                <option value="WP Kuala Lumpur">WP Kuala Lumpur</option>
+                <option value="WP Labuan">WP Labuan</option>
+                <option value="WP Putrajaya">WP Putrajaya</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Monthly Salary Group *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="salary_group" id="salaryLess2k" value="less than RM2,000" required>
+                    <label for="salaryLess2k">Less than RM2,000</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="salary_group" id="salary2k_5k" value="RM2,001-RM5,000" required>
+                    <label for="salary2k_5k">RM2,001-RM5,000</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="salary_group" id="salary5k_10k" value="RM5,001-RM10,000" required>
+                    <label for="salary5k_10k">RM5,001-RM10,000</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="salary_group" id="salaryMore10k" value="more than RM10,000" required>
+                    <label for="salaryMore10k">More than RM10,000</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Interest * (Select all that apply)</label>
+            <div class="multi-select-container checkbox-group">
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestTech" value="Technology">
+                    <label for="interestTech">Technology</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestFashion" value="Fashion">
+                    <label for="interestFashion">Fashion</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestBusiness" value="Business">
+                    <label for="interestBusiness">Business</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestFNB" value="Food and Beverage">
+                    <label for="interestFNB">Food and Beverage</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestTravel" value="Travel">
+                    <label for="interestTravel">Travel</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestHealth" value="Health">
+                    <label for="interestHealth">Health</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestAgriculture" value="Agriculture">
+                    <label for="interestAgriculture">Agriculture</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" name="interest" id="interestOthers" value="Others">
+                    <label for="interestOthers">Others (please specify)</label>
+                </div>
+            </div>
+            <div class="others-specify" id="othersSpecify">
+                <input type="text" name="interest_others" id="interestOthersField" placeholder="Please specify">
+            </div>
+        </div>
+        
+        <div class="consent-section">
+            <h3>Data Protection & Consent</h3>
+            <p>By clicking REGISTER, you agree to the following:</p>
+            <ul>
+                <li><strong>Consent to Data Processing:</strong> Your personal data will be collected by Pintar Web Enterprise for the purposes of managing the grand prize draw and providing a report to the convention organizers and participating vendors.</li>
+                <li><strong>Anonymous Aggregation:</strong> Your data, along with other participants', may be used in an anonymous, aggregated form for event analysis and marketing research.</li>
+                <li><strong>Vendor Communication:</strong> By submitting your information, you agree that your name and email may be shared with the specific vendor(s) whose QR code you scanned so they can send you marketing materials.</li>
+            </ul>
+            <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                Your personal data will be processed in accordance with the Personal Data Protection Act (PDPA) 2010 of Malaysia. You have the right to access and correct your personal data. For more information, please contact us at <a href="mailto:admin@pintarweb.com.my">admin@pintarweb.com.my</a>.
+            </p>
+            <div class="consent-checkbox">
+                <input type="checkbox" name="consent" id="consentField" required>
+                <label for="consentField">I have read and agree to the Data Protection & Consent terms above *</label>
+            </div>
+        </div>
+        
         <input type="hidden" name="vendor_id" id="vendorId">
         
         <button type="submit" id="submitBtn">Register & Get Your Event Pass</button>
@@ -174,6 +500,40 @@
         const urlParams = new URLSearchParams(window.location.search);
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
+        
+        // Country/State logic - enable state only if country is Malaysia
+        const countryField = document.getElementById('countryField');
+        const stateField = document.getElementById('stateField');
+        
+        function updateStateField() {
+            if (countryField.value === 'Malaysia') {
+                stateField.disabled = false;
+                stateField.required = true;
+            } else {
+                stateField.disabled = true;
+                stateField.required = false;
+                stateField.value = '';
+            }
+        }
+        
+        countryField.addEventListener('change', updateStateField);
+        updateStateField(); // Initialize on page load
+        
+        // Handle "Others" interest checkbox
+        const interestOthersCheckbox = document.getElementById('interestOthers');
+        const othersSpecifyDiv = document.getElementById('othersSpecify');
+        const interestOthersField = document.getElementById('interestOthersField');
+        
+        interestOthersCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                othersSpecifyDiv.classList.add('show');
+                interestOthersField.required = true;
+            } else {
+                othersSpecifyDiv.classList.remove('show');
+                interestOthersField.required = false;
+                interestOthersField.value = '';
+            }
+        });
 
         // Phone number formatting
         function formatPhoneNumber(value) {
@@ -305,8 +665,32 @@
                 }
             });
             
+            // Collect form data including checkboxes and radio buttons
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
+            const data = {};
+            
+            // Get all form fields
+            for (const [key, value] of formData.entries()) {
+                if (key === 'interest') {
+                    // Handle multiple interests (checkboxes)
+                    if (!data.interest) {
+                        data.interest = [];
+                    }
+                    data.interest.push(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // Convert interest array to comma-separated string for API
+            if (data.interest && Array.isArray(data.interest)) {
+                data.interest = data.interest.join(',');
+            }
+            
+            // Add interest_others if "Others" is selected
+            if (data.interest && data.interest.includes('Others') && data.interest_others) {
+                data.interest = data.interest.replace('Others', `Others: ${data.interest_others}`);
+            }
             
             // Client-side validation
             if (!data.name || data.name.trim().length < 2) {
@@ -330,6 +714,36 @@
             if (data.email && !validateEmail(data.email)) {
                 showError('Please enter a valid email address');
                 document.getElementById('emailField').classList.add('field-error');
+                document.getElementById('loading').classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                return;
+            }
+            
+            // Validate at least one interest is selected
+            const interests = formData.getAll('interest');
+            if (!interests || interests.length === 0) {
+                showError('Please select at least one interest');
+                document.getElementById('loading').classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                return;
+            }
+            
+            // Validate "Others" interest has specification
+            if (interests.includes('Others') && !data.interest_others?.trim()) {
+                showError('Please specify your interest in the "Others" field');
+                interestOthersField.classList.add('field-error');
+                document.getElementById('loading').classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                return;
+            }
+            
+            // Validate consent
+            if (!data.consent) {
+                showError('Please agree to the Data Protection & Consent terms');
+                document.getElementById('consentField').classList.add('field-error');
                 document.getElementById('loading').classList.add('hidden');
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;

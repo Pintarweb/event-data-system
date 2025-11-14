@@ -22,7 +22,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract form data from POST request\nconst { name, phone, email, vendor_id } = $input.first().json.body;\n\n\n// Return data for Supabase insertion\nreturn [\n  {\n    json: {\n      // For Supabase insertion (Supabase will generate the UUID)\n      name: name,\n      phone: phone,\n      email: email || '',\n      total_points: 1,\n      \n      // For workflow reference\n      vendor_id: vendor_id,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+        "jsCode": "// Extract form data from POST request\nconst body = $input.first().json.body;\nconst { name, phone, email, vendor_id, gender, age_group, country, state, salary_group, interest, consent } = body;\n\n// Return data for Supabase insertion\nreturn [\n  {\n    json: {\n      // For Supabase insertion (Supabase will generate the UUID)\n      name: name,\n      phone: phone,\n      email: email || '',\n      gender: gender || null,\n      age_group: age_group || null,\n      country: country || null,\n      state: state || null,\n      salary_group: salary_group || null,\n      interest: interest || null,\n      consent: consent === 'on' || consent === true || consent === 'true',\n      total_points: 1,\n      \n      // For workflow reference\n      vendor_id: vendor_id,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -49,6 +49,34 @@
             {
               "fieldId": "email",
               "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "gender",
+              "fieldValue": "={{ $json.gender }}"
+            },
+            {
+              "fieldId": "age_group",
+              "fieldValue": "={{ $json.age_group }}"
+            },
+            {
+              "fieldId": "country",
+              "fieldValue": "={{ $json.country }}"
+            },
+            {
+              "fieldId": "state",
+              "fieldValue": "={{ $json.state }}"
+            },
+            {
+              "fieldId": "salary_group",
+              "fieldValue": "={{ $json.salary_group }}"
+            },
+            {
+              "fieldId": "interest",
+              "fieldValue": "={{ $json.interest }}"
+            },
+            {
+              "fieldId": "consent",
+              "fieldValue": "={{ $json.consent }}"
             },
             {
               "fieldId": "total_points",
