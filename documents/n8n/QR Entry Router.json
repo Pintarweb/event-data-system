@@ -246,7 +246,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get current visitor data and increment points\nconst visitorData = $input.first().json;  // From Supabase GET\nconst qrData = $('Combine & Route Logic').first().json;  // From Combine function\n\nconst currentPoints = visitorData.total_points || 0;\nconst newPoints = currentPoints + 1;\n\nreturn [\n  {\n    json: {\n      visitor_id: visitorData.id,\n      current_points: currentPoints,\n      new_points: newPoints,\n      name: visitorData.name,\n      vendor_id: qrData.vendor_id,\n      // For Supabase update\n      update_visitor_id: visitorData.id,\n      update_points: newPoints\n    }\n  }\n];"
+        "jsCode": "// Get current visitor data and increment points\nconst visitorData = $input.first().json;  // From Supabase GET\nconst qrData = $('Combine & Route Logic').first().json;  // From Combine function\n\nconst currentPoints = visitorData.total_points || 0;\nconst newPoints = currentPoints + 1;\n\n// Get vendor_id from vendor lookup (need to get actual UUID)\nconst vendorData = $('Check Vendor').first().json || {};\nconst vendorId = vendorData.id || qrData.vendor_id;\n\nreturn [\n  {\n    json: {\n      visitor_id: visitorData.id,\n      current_points: currentPoints,\n      new_points: newPoints,\n      name: visitorData.name,\n      vendor_id: vendorId,\n      // For Supabase update\n      update_visitor_id: visitorData.id,\n      update_points: newPoints,\n      // For visits table\n      visit_vendor_id: vendorId,\n      visit_visitor_id: visitorData.id,\n      scan_timestamp: new Date().toISOString(),\n      points_awarded: 1\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
