@@ -34,7 +34,7 @@
         200
       ],
       "parameters": {
-        "jsCode": "// Extract form data\nconst body = $input.first().json.body || {};\n\nconst vendor = {\n  vendor_name: (body.vendor_name || '').trim(),\n  business_type: (body.business_type || '').trim(),\n  contact_person: (body.contact_person || '').trim(),\n  designation: (body.designation || '').trim(),\n  contact_phone: (body.contact_phone || '').replace(/\\\\D/g, ''),\n  email: (body.email || '').trim(),\n  company_website: (body.company_website || '').trim(),\n  created_at: new Date().toISOString()\n};\n\nif (vendor.company_website && !/^https?:\\\/\\\//i.test(vendor.company_website)) {\n  vendor.company_website = `https://${vendor.company_website}`;\n}\n\nreturn [{ json: vendor }];"
+        "jsCode": "// Extract form data\nconst body = $input.first().json.body || {};\n\nconst vendor = {\n  vendor_name: (body.vendor_name || '').trim(),\n  business_type: (body.business_type || '').trim(),\n  contact_person: (body.contact_person || '').trim(),\n  designation: (body.designation || '').trim(),\n  contact_phone: (body.contact_phone || '').replace(/\\D/g, ''),\n  email: (body.email || '').trim(),\n  company_website: (body.company_website || '').trim(),\n  created_at: new Date().toISOString()\n};\n\nif (vendor.company_website && !/^https?:\\/\\//i.test(vendor.company_website)) {\n  vendor.company_website = `https://${vendor.company_website}`;\n}\n\nreturn [{ json: vendor }];"
       }
     },
     {
@@ -105,16 +105,7 @@
         80
       ],
       "parameters": {
-        "jsCode": "const errorPayload = $input.first().json || {};\nconst vendor = $items('Process Form Data')[0]?.json || {};\n\nconst errorText = (errorPayload.error || errorPayload.message || '').toString();\nconst lower = errorText.toLowerCase();\n\nconst duplicateFields = [];\nif (lower.includes('vendor_name')) duplicateFields.push('vendor_name');\nif (lower.includes('email')) duplicateFields.push('email');\nif (lower.includes('duplicate') && duplicateFields.length === 0) {\n  duplicateFields.push('email');\n}\n\nconst isDuplicate = duplicateFields.length > 0;\n\nlet message = 'Vendor registration failed.';\nif (isDuplicate) {\n  if (duplicateFields.length === 2) {\n    message = 'Vendor name and email are already registered.';\n  } else if (duplicateFields.includes('vendor_name')) {\n    message = 'Vendor name is already registered.';\n  } else if (duplicateFields.includes('email')) {\n    message = 'Email is already registered.';\n  } else {\n    message = 'Vendor already registered.';\n  }\n}\n\nreturn [{
-  json: {
-    duplicate: isDuplicate,
-    error: message,
-    duplicate_fields: duplicateFields,
-    raw_error: errorText,
-    vendor_name: vendor.vendor_name || errorPayload.vendor_name || '',
-    email: vendor.email || errorPayload.email || ''
-  }
-}];"
+        "jsCode": "const errorPayload = $input.first().json || {};\nconst vendor = $items('Process Form Data')[0]?.json || {};\n\nconst errorText = (errorPayload.error || errorPayload.message || '').toString();\nconst lower = errorText.toLowerCase();\n\nconst duplicateFields = [];\nif (lower.includes('vendor_name')) duplicateFields.push('vendor_name');\nif (lower.includes('email')) duplicateFields.push('email');\nif (lower.includes('duplicate') && duplicateFields.length === 0) {\n  duplicateFields.push('email');\n}\n\nconst isDuplicate = duplicateFields.length > 0;\n\nlet message = 'Vendor registration failed.';\nif (isDuplicate) {\n  if (duplicateFields.length === 2) {\n    message = 'Vendor name and email are already registered.';\n  } else if (duplicateFields.includes('vendor_name')) {\n    message = 'Vendor name is already registered.';\n  } else if (duplicateFields.includes('email')) {\n    message = 'Email is already registered.';\n  } else {\n    message = 'Vendor already registered.';\n  }\n}\n\nreturn [{\n  json: {\n    duplicate: isDuplicate,\n    error: message,\n    duplicate_fields: duplicateFields,\n    raw_error: errorText,\n    vendor_name: vendor.vendor_name || errorPayload.vendor_name || '',\n    email: vendor.email || errorPayload.email || ''\n  }\n}];"
       }
     },
     {
@@ -186,19 +177,7 @@
         360
       ],
       "parameters": {
-        "jsCode": "const createResult = $input.first().json || {};\nconst vendorInput = $items('Process Form Data')[0]?.json || {};\n\nconst data = Array.isArray(createResult.data)
-  ? createResult.data[0]
-  : (Array.isArray(createResult)
-      ? createResult[0]
-      : createResult.data || createResult);
-\nreturn [{
-  json: {
-    success: true,
-    message: 'Vendor registered successfully',
-    vendor_id: data?.vendor_id || data?.id || null,
-    vendor_name: data?.vendor_name || vendorInput.vendor_name
-  }
-}];"
+        "jsCode": "const createResult = $input.first().json || {};\nconst vendorInput = $items('Process Form Data')[0]?.json || {};\n\nconst data = Array.isArray(createResult.data)\n  ? createResult.data[0]\n  : (Array.isArray(createResult)\n      ? createResult[0]\n      : createResult.data || createResult);\nreturn [{\n  json: {\n    success: true,\n    message: 'Vendor registered successfully',\n    vendor_id: data?.vendor_id || data?.id || null,\n    vendor_name: data?.vendor_name || vendorInput.vendor_name\n  }\n}];"
       }
     },
     {
