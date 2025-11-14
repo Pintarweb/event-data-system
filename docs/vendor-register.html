@@ -359,10 +359,23 @@
                 
                 if (response.ok) {
                     if (result.success === false) {
-                        const errorMsg = result.message || 'Vendor registration failed.';
-                        if (Array.isArray(result.duplicate_fields) && result.duplicate_fields.length > 0) {
+                        // Prefer explicit error codes (mirror visitor-register.html behavior)
+                        let errorMsg = result.message || 'Vendor registration failed.';
+
+                        if (result.error === 'duplicate_email') {
+                            errorMsg = '📧 This email address is already registered. Please enter a different email address.';
+                            handleDuplicateFields(['email']);
+                        } else if (result.error === 'duplicate_name' || result.error === 'duplicate_vendor_name') {
+                            errorMsg = '🏷️ This vendor name is already registered. Please enter a different vendor name.';
+                            handleDuplicateFields(['vendor_name']);
+                        } else if (result.error === 'duplicate_both') {
+                            errorMsg = '🏷️📧 Both vendor name and email are already registered. Please use different details.';
+                            handleDuplicateFields(['vendor_name', 'email']);
+                        } else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                            // Fallback: use duplicate_fields array if available
                             handleDuplicateFields(result.duplicate_fields);
                         }
+
                         showError(errorMsg);
                     } else {
                         registrationSucceeded = true;
