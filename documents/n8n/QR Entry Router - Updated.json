@@ -1,0 +1,670 @@
+{
+  "name": "QR Entry Router",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/qr-scan",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        144
+      ],
+      "id": "1fa72f1d-7ec5-43b9-b8a6-5478aba69800",
+      "name": "Webhook",
+      "webhookId": "1257d437-193e-40d5-bf8d-1495845edd89"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract parameters from QR scan\nconst vendorId = $input.first().json.query.vendor_id;\nconst visitorId = $input.first().json.query.visitor_id;\n\n// Use dummy UUID for new visitors instead of null\nconst finalVisitorId = visitorId || '00000000-0000-0000-0000-000000000000';\n\nreturn [\n  {\n    json: {\n      vendor_id: vendorId,\n      visitor_id: finalVisitorId, // Never null - always UUID format\n      scan_time: new Date().toISOString(),\n      \n      // For database lookup - we'll use vendor_id to find the vendor\n      lookup_field: vendorId\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        144
+      ],
+      "id": "23e8b648-1b4f-40d3-8333-56d3d9f784b0",
+      "name": "Function to extract Parameter"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "vendors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "qr_code",
+              "keyValue": "={{ $json.vendor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        464,
+        144
+      ],
+      "id": "3456f22d-5365-40bb-8fc5-037c51cfeeac",
+      "name": "Check Vendor",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Function to extract Parameter').item.json.visitor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        688,
+        144
+      ],
+      "id": "98bc9104-e4af-446f-8fec-f73a2d80e87a",
+      "name": "Check Visitor",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from all three nodes\nconst qrData = $('Function to extract Parameter').first().json;           // From QR Function\nconst vendorData = $('Check Vendor').first().json || {}; // From Vendor Lookup  \nconst visitorData = $input.first().json || {}; // From Visitor Lookup\n\n// Determine the route\nlet route = '';\nif (!vendorData.id) {\n  route = 'vendor_not_found';\n} else if (!qrData.visitor_id || !visitorData.id) {\n  route = 'new_visitor';\n} else {\n  route = 'returning_visitor';\n}\n\nreturn [\n  {\n    json: {\n      route: route,\n      vendor_id: qrData.vendor_id,\n      visitor_id: qrData.visitor_id,\n      vendor_exists: !!vendorData.id,\n      visitor_exists: !!visitorData.id,\n      vendor_name: vendorData.vendor_name,\n      visitor_name: visitorData.name,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        144
+      ],
+      "id": "5c422312-999c-45ce-8e70-8fdfd7b64520",
+      "name": "Combine & Route Logic"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "vendor_not_found",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2eae2bed-b905-4888-95a1-38732b59c9fb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vendor Not Found"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a234e181-68ef-4297-a250-ed6499ccdfe7",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "new_visitor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Visitor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "35ef12ae-979c-442f-8b9d-83b614ff4e21",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "returning_visitor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Returning Visitor"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1136,
+        128
+      ],
+      "id": "93357fe6-7afd-45c1-ae74-a558457705eb",
+      "name": "3-Way Routing"
+    },
+    {
+      "parameters": {
+        "respondWith": "redirect",
+        "redirectURL": "=https://pintarweb.github.io/event-data-system/visitor-register.html?vendor_id={{ $json.vendor_id }}",
+        "options": {
+          "responseCode": 302,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Location",
+                "value": "=https://pintarweb.github.io/event-data-system/visitor-register.html?vendor_id={{ $json.vendor_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1360,
+        48
+      ],
+      "id": "fc39cb0e-9f48-4df0-a5b9-c8b6ee8adf8c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.visitor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        240
+      ],
+      "id": "89075c5d-a9c0-4547-b1f7-051b47a4af41",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get current visitor data and increment points\nconst visitorData = $input.first().json;  // From Supabase GET\nconst qrData = $('Combine & Route Logic').first().json;  // From Combine function\n\nconst currentPoints = visitorData.total_points || 0;\nconst newPoints = currentPoints + 1;\n\n// Get vendor_id from vendor lookup (need to get actual UUID)\nconst vendorData = $('Check Vendor').first().json || {};\nconst vendorId = vendorData.id || qrData.vendor_id;\n\nreturn [\n  {\n    json: {\n      visitor_id: visitorData.id,\n      current_points: currentPoints,\n      new_points: newPoints,\n      name: visitorData.name,\n      vendor_id: vendorId,\n      // For Supabase update\n      update_visitor_id: visitorData.id,\n      update_points: newPoints,\n      // For visits table\n      visit_vendor_id: vendorId,\n      visit_visitor_id: visitorData.id,\n      scan_timestamp: new Date().toISOString(),\n      points_awarded: 1\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        240
+      ],
+      "id": "4cec85f2-673c-408b-91c0-d8566da7163b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "visits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "visitor_id",
+              "keyValue": "={{ $json.visit_visitor_id }}"
+            },
+            {
+              "keyName": "vendor_id",
+              "keyValue": "={{ $json.visit_vendor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        240
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Check Existing Visit",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if visit exists and prepare data for upsert\nconst existingVisit = $input.first().json;  // From Check Existing Visit\nconst visitData = $('Code in JavaScript').first().json;  // From Code in JavaScript\n\nif (existingVisit && existingVisit.id) {\n  // Visit exists - increment count\n  const currentCount = existingVisit.visit_count || 1;\n  const newCount = currentCount + 1;\n  \n  return [{\n    json: {\n      ...visitData,\n      visit_exists: true,\n      visit_id: existingVisit.id,\n      current_visit_count: currentCount,\n      new_visit_count: newCount\n    }\n  }];\n} else {\n  // Visit doesn't exist - create new\n  return [{\n    json: {\n      ...visitData,\n      visit_exists: false,\n      visit_count: 1\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        240
+      ],
+      "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "name": "Handle Visit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "visit-exists-check",
+              "leftValue": "={{ $json.visit_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "isTrue"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2256,
+        240
+      ],
+      "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "name": "Visit Exists?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "visits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.visit_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "visit_count",
+              "fieldValue": "={{ $json.new_visit_count }}"
+            },
+            {
+              "fieldId": "scan_timestamp",
+              "fieldValue": "={{ $json.scan_timestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        160
+      ],
+      "id": "d4e5f6a7-b8c9-0123-def4-456789012345",
+      "name": "Update Visit",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "visits",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "visitor_id",
+              "fieldValue": "={{ $json.visit_visitor_id }}"
+            },
+            {
+              "fieldId": "vendor_id",
+              "fieldValue": "={{ $json.visit_vendor_id }}"
+            },
+            {
+              "fieldId": "scan_timestamp",
+              "fieldValue": "={{ $json.scan_timestamp }}"
+            },
+            {
+              "fieldId": "points_awarded",
+              "fieldValue": "={{ $json.points_awarded }}"
+            },
+            {
+              "fieldId": "visit_count",
+              "fieldValue": "={{ $json.visit_count }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        320
+      ],
+      "id": "e5f6a7b8-c9d0-1234-ef56-567890123456",
+      "name": "Create Visit",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "visitors",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.update_visitor_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "total_points",
+              "fieldValue": "={{ $json.update_points }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2704,
+        240
+      ],
+      "id": "538b8ae4-841f-4502-bf22-419853396bb6",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs4fSTfqgDpewfc1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 302,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Location",
+                "value": "=https://pintarweb.github.io/event-data-system/pass.html?visitor_id={{ $json.visitor_id }}&name={{ $json.name }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2928,
+        240
+      ],
+      "id": "985335a2-9f83-4857-bb3e-8f05a3b30dac",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Function to extract Parameter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function to extract Parameter": {
+      "main": [
+        [
+          {
+            "node": "Check Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Vendor": {
+      "main": [
+        [
+          {
+            "node": "Check Visitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Visitor": {
+      "main": [
+        [
+          {
+            "node": "Combine & Route Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine & Route Logic": {
+      "main": [
+        [
+          {
+            "node": "3-Way Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3-Way Routing": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Visit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Visit": {
+      "main": [
+        [
+          {
+            "node": "Handle Visit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Visit": {
+      "main": [
+        [
+          {
+            "node": "Visit Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visit Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update Visit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Visit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Visit": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Visit": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "234606ac-b6bd-4b07-993f-a4d4b530c483",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e3c747618bb4eb47bfb3d23d87a9d45315b912b1a05e4503bdf9b19a5155ed0"
+  },
+  "id": "H8R5HYgOQAWpO2Fu",
+  "tags": []
+}
+
