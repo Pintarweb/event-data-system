@@ -251,11 +251,23 @@
         }
 
         function handleDuplicateFields(fields = []) {
+            const fieldMap = {
+                email: document.getElementById('emailAddress'),
+                vendor_name: document.getElementById('vendorName'),
+                contact_phone: document.getElementById('contactPhone'),
+                phone: document.getElementById('contactPhone')
+            };
+            
+            const placeholderMap = {
+                email: '📧 This email is already registered.',
+                vendor_name: '🏷️ Vendor name already registered.',
+                contact_phone: '📱 This phone is already registered.',
+                phone: '📱 This phone is already registered.'
+            };
+            
+            let firstField = null;
+            
             fields.forEach(fieldName => {
-                const fieldMap = {
-                    email: document.getElementById('emailAddress'),
-                    vendor_name: document.getElementById('vendorName')
-                };
                 const field = fieldMap[fieldName];
                 if (field) {
                     if (!field.dataset.originalPlaceholder) {
@@ -263,12 +275,16 @@
                     }
                     field.value = '';
                     field.classList.add('field-error');
-                    field.placeholder = fieldName === 'email'
-                        ? 'Email already registered'
-                        : 'Vendor name already registered';
-                    field.focus();
+                    field.placeholder = placeholderMap[fieldName] || 'This value is already registered.';
+                    if (!firstField) {
+                        firstField = field;
+                    }
                 }
             });
+            
+            if (firstField) {
+                setTimeout(() => firstField.focus(), 100);
+            }
         }
         
         // Format phone as user types
@@ -358,26 +374,29 @@
                 const result = await response.json().catch(() => ({}));
                 
                 if (response.ok) {
-                    if (result.success === false) {
-                        // Prefer explicit error codes (mirror visitor-register.html behavior)
-                        let errorMsg = result.message || 'Vendor registration failed.';
+                if (result.success === false) {
+                    // Prefer explicit error codes (mirror visitor-register.html behavior)
+                    let errorMsg = result.message || 'Vendor registration failed.';
 
-                        if (result.error === 'duplicate_email') {
-                            errorMsg = '📧 This email address is already registered. Please enter a different email address.';
-                            handleDuplicateFields(['email']);
-                        } else if (result.error === 'duplicate_name' || result.error === 'duplicate_vendor_name') {
-                            errorMsg = '🏷️ This vendor name is already registered. Please enter a different vendor name.';
-                            handleDuplicateFields(['vendor_name']);
-                        } else if (result.error === 'duplicate_both') {
-                            errorMsg = '🏷️📧 Both vendor name and email are already registered. Please use different details.';
-                            handleDuplicateFields(['vendor_name', 'email']);
-                        } else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                            // Fallback: use duplicate_fields array if available
-                            handleDuplicateFields(result.duplicate_fields);
-                        }
+                    if (result.error === 'duplicate_email') {
+                        errorMsg = '📧 This email address is already registered. Please enter a different email address.';
+                        handleDuplicateFields(['email']);
+                    } else if (result.error === 'duplicate_phone' || result.error === 'duplicate_contact_phone') {
+                        errorMsg = '📱 This phone number is already registered. Please enter a different number.';
+                        handleDuplicateFields(['contact_phone']);
+                    } else if (result.error === 'duplicate_name' || result.error === 'duplicate_vendor_name') {
+                        errorMsg = '🏷️ This vendor name is already registered. Please enter a different vendor name.';
+                        handleDuplicateFields(['vendor_name']);
+                    } else if (result.error === 'duplicate_both') {
+                        errorMsg = '📧📱 Both phone number and email are already registered. Please use different contact information.';
+                        handleDuplicateFields(['contact_phone', 'email']);
+                    } else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                        // Fallback: use duplicate_fields array if available
+                        handleDuplicateFields(result.duplicate_fields);
+                    }
 
-                        showError(errorMsg);
-                    } else {
+                    showError(errorMsg);
+                } else {
                         registrationSucceeded = true;
                         showSuccess('✅ Vendor registered successfully!');
                         form.reset();
