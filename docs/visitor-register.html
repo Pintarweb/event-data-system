@@ -281,7 +281,7 @@
 <body>
     <h2>🎪 Event Registration</h2>
     
-    <div id="messageContainer"></div>
+    <div id="messageContainer" style="scroll-margin-top: 20px;"></div>
     
     <form id="registrationForm">
         <div class="form-group">
@@ -294,9 +294,9 @@
         <div class="form-group">
             <label for="phoneField">Phone Number *</label>
             <input type="tel" name="phone" required id="phoneField" 
-                   placeholder="e.g., 012-345-6789" 
+                   placeholder="e.g., +60 12-345-6789" 
                    aria-required="true">
-            <div class="help-text">Format: 012-345-6789</div>
+            <div class="help-text">Format: +60 XX-XXX-XXXX or +60 XX-XXXX-XXXX</div>
         </div>
         
         <div class="form-group">
@@ -357,28 +357,28 @@
             <label for="countryField">Country of Origin *</label>
             <select name="country" id="countryField" required>
                 <option value="Malaysia" selected>Malaysia</option>
-                <option value="Singapore">Singapore</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Indonesia">Indonesia</option>
+                <option value="Australia">Australia</option>
+                <option value="Bangladesh">Bangladesh</option>
                 <option value="Brunei">Brunei</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Vietnam">Vietnam</option>
-                <option value="Myanmar">Myanmar</option>
                 <option value="Cambodia">Cambodia</option>
-                <option value="Laos">Laos</option>
+                <option value="Canada">Canada</option>
                 <option value="China">China</option>
                 <option value="India">India</option>
-                <option value="Bangladesh">Bangladesh</option>
-                <option value="Pakistan">Pakistan</option>
-                <option value="Sri Lanka">Sri Lanka</option>
+                <option value="Indonesia">Indonesia</option>
                 <option value="Japan">Japan</option>
-                <option value="South Korea">South Korea</option>
-                <option value="Australia">Australia</option>
+                <option value="Laos">Laos</option>
+                <option value="Myanmar">Myanmar</option>
                 <option value="New Zealand">New Zealand</option>
+                <option value="Other">Other</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Philippines">Philippines</option>
+                <option value="Singapore">Singapore</option>
+                <option value="South Korea">South Korea</option>
+                <option value="Sri Lanka">Sri Lanka</option>
+                <option value="Thailand">Thailand</option>
                 <option value="United Kingdom">United Kingdom</option>
                 <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
-                <option value="Other">Other</option>
+                <option value="Vietnam">Vietnam</option>
             </select>
         </div>
         
@@ -538,28 +538,86 @@
         // Phone number formatting
         function formatPhoneNumber(value) {
             // Remove all non-digits
-            const phoneNumber = value.replace(/\D/g, '');
+            let phoneNumber = value.replace(/\D/g, '');
             
-            // Format based on length (Malaysian format: XXX-XXX-XXXX)
-            if (phoneNumber.length <= 3) return phoneNumber;
-            if (phoneNumber.length <= 6) {
-                return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3);
+            // Remove leading +60 or 60 if user typed them, we'll add +60 ourselves
+            // Only remove if it's at the start and followed by more digits
+            if (phoneNumber.startsWith('60') && phoneNumber.length > 2) {
+                phoneNumber = phoneNumber.substring(2);
             }
-            if (phoneNumber.length <= 9) {
-                return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3, 6) + '-' + phoneNumber.slice(6);
+            
+            // If no digits, return empty string
+            if (phoneNumber.length === 0) {
+                return '';
             }
-            return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3, 6) + '-' + phoneNumber.slice(6, 9) + '-' + phoneNumber.slice(9, 12);
+            
+            // Limit to 11 digits (Malaysian mobile numbers are max 11 digits)
+            if (phoneNumber.length > 11) {
+                phoneNumber = phoneNumber.slice(0, 11);
+            }
+            
+            // Format based on length (Malaysian format: +60 XX-XXX-XXXX or +60 XX-XXXX-XXXX)
+            if (phoneNumber.length <= 2) {
+                return '+60 ' + phoneNumber;
+            } else if (phoneNumber.length <= 5) {
+                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
+            } else if (phoneNumber.length <= 10) {
+                // 10 digits: +60 XX-XXX-XXXX
+                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 5) + '-' + phoneNumber.slice(5);
+            } else {
+                // 11 digits: +60 XX-XXXX-XXXX
+                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
+            }
         }
 
         // Phone input formatting
         const phoneField = document.getElementById('phoneField');
         phoneField.addEventListener('input', function(e) {
             const cursorPosition = e.target.selectionStart;
+            const oldValue = e.target.value;
+            
+            // Count digits (excluding +60 prefix) before cursor
+            const beforeCursor = oldValue.substring(0, cursorPosition);
+            // Remove +60 and count digits - handle both "+60 " and just digits
+            let digitsBeforeCursor = beforeCursor.replace(/^\+60\s?/i, '').replace(/\D/g, '').length;
+            
+            // Also remove any leading 60 digits if user typed them
+            const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
+            if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
+                digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
+            }
+            
             const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
             
-            // Restore cursor position
-            const newCursorPosition = cursorPosition + (formatted.length - e.target.value.length);
+            // Calculate new cursor position based on digits before cursor (excluding +60)
+            // Find where in the formatted string we have 'digitsBeforeCursor' digits after +60
+            let newCursorPosition = 0;
+            let digitCount = 0;
+            
+            // Skip past "+60 " prefix (4 characters)
+            const prefixLength = formatted.startsWith('+60 ') ? 4 : 0;
+            
+            for (let i = prefixLength; i < formatted.length; i++) {
+                const char = formatted[i];
+                
+                // Count digits after prefix
+                if (/\d/.test(char)) {
+                    digitCount++;
+                    
+                    // If we've reached the number of digits that were before cursor
+                    if (digitCount === digitsBeforeCursor) {
+                        newCursorPosition = i + 1;
+                        break;
+                    }
+                }
+            }
+            
+            // If cursor was at end or we didn't find position, place it at end of formatted string
+            if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\+60\s?/i, '').replace(/\D/g, '').length) {
+                newCursorPosition = formatted.length;
+            }
+            
             e.target.setSelectionRange(newCursorPosition, newCursorPosition);
         });
 
@@ -572,8 +630,14 @@
 
         // Phone validation
         function validatePhone(phone) {
-            const digitsOnly = phone.replace(/\D/g, '');
-            return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+            // Remove +60 and get only the Malaysian phone digits
+            let digitsOnly = phone.replace(/\D/g, '');
+            // Remove leading 60 if present (country code)
+            if (digitsOnly.startsWith('60')) {
+                digitsOnly = digitsOnly.substring(2);
+            }
+            // Malaysian phone numbers: 10-11 digits (mobile: 01X-XXX-XXXX or 01X-XXXX-XXXX)
+            return digitsOnly.length >= 10 && digitsOnly.length <= 11;
         }
 
         // Helper function to show success messages
@@ -595,9 +659,15 @@
             
             const errorElement = document.createElement('div');
             errorElement.className = 'error-message';
+            errorElement.id = 'errorMessage';
             errorElement.textContent = message;
             
             container.appendChild(errorElement);
+            
+            // Scroll to error message
+            setTimeout(() => {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
 
         // Helper function to clear and highlight duplicate fields
@@ -703,7 +773,7 @@
             }
             
             if (!validatePhone(data.phone)) {
-                showError('Please enter a valid phone number (10-15 digits)');
+                showError('Please enter a valid Malaysian phone number (+60 XX-XXX-XXXX or +60 XX-XXXX-XXXX)');
                 document.getElementById('phoneField').classList.add('field-error');
                 document.getElementById('loading').classList.add('hidden');
                 submitBtn.disabled = false;
@@ -750,8 +820,13 @@
                 return;
             }
             
-            // Clean phone number (remove formatting for API)
-            data.phone = data.phone.replace(/\D/g, '');
+            // Clean phone number (remove formatting and country code for API)
+            // Remove all non-digits, then remove leading 60 if present
+            let cleanedPhone = data.phone.replace(/\D/g, '');
+            if (cleanedPhone.startsWith('60')) {
+                cleanedPhone = cleanedPhone.substring(2);
+            }
+            data.phone = cleanedPhone;
             
             try {
                 const response = await fetch(N8N_WEBHOOK_URL, {
