@@ -55,6 +55,47 @@
             box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
         }
         
+        .phone-input-wrapper {
+            display: flex;
+            align-items: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .phone-input-wrapper:focus-within {
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+        
+        .phone-prefix {
+            padding: 12px 8px 12px 12px;
+            color: #666;
+            font-size: 16px;
+            user-select: none;
+            pointer-events: none;
+            border-right: 1px solid #ddd;
+            background-color: #f5f5f5;
+            border-radius: 8px 0 0 8px;
+        }
+        
+        .phone-input-wrapper input {
+            border: none;
+            border-radius: 0 8px 8px 0;
+            flex: 1;
+        }
+        
+        .phone-input-wrapper input:focus {
+            border: none;
+            box-shadow: none;
+        }
+        
+        .phone-input-wrapper.field-error {
+            border-color: #ff4444;
+            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+        }
+        
         button {
             background: #25D366;
             color: white;
@@ -293,10 +334,13 @@
         
         <div class="form-group">
             <label for="phoneField">Phone Number *</label>
-            <input type="tel" name="phone" required id="phoneField" 
-                   placeholder="e.g., +60 12-345-6789" 
-                   aria-required="true">
-            <div class="help-text">Format: +60 XX-XXX-XXXX or +60 XX-XXXX-XXXX</div>
+            <div class="phone-input-wrapper" id="phoneWrapper">
+                <span class="phone-prefix">+60</span>
+                <input type="tel" name="phone" required id="phoneField" 
+                       placeholder="e.g., 01-2345-6789" 
+                       aria-required="true">
+            </div>
+            <div class="help-text">Format: 01-2345-6789 or 01-2345-67890</div>
         </div>
         
         <div class="form-group">
@@ -535,13 +579,12 @@
             }
         });
 
-        // Phone number formatting
+        // Phone number formatting (returns only the Malaysian number part, without +60)
         function formatPhoneNumber(value) {
             // Remove all non-digits
             let phoneNumber = value.replace(/\D/g, '');
             
-            // Remove leading +60 or 60 if user typed them, we'll add +60 ourselves
-            // Only remove if it's at the start and followed by more digits
+            // Remove leading 60 if user typed it (country code)
             if (phoneNumber.startsWith('60') && phoneNumber.length > 2) {
                 phoneNumber = phoneNumber.substring(2);
             }
@@ -556,32 +599,33 @@
                 phoneNumber = phoneNumber.slice(0, 11);
             }
             
-            // Format based on length (Malaysian format: +60 XX-XXX-XXXX or +60 XX-XXXX-XXXX)
+            // Format based on length (Malaysian format: XX-XXXX-XXXX for 10 digits, XX-XXXX-XXXX for 11 digits)
             if (phoneNumber.length <= 2) {
-                return '+60 ' + phoneNumber;
-            } else if (phoneNumber.length <= 5) {
-                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
+                return phoneNumber;
+            } else if (phoneNumber.length <= 6) {
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
             } else if (phoneNumber.length <= 10) {
-                // 10 digits: +60 XX-XXX-XXXX
-                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 5) + '-' + phoneNumber.slice(5);
+                // 10 digits: XX-XXXX-XXXX
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
             } else {
-                // 11 digits: +60 XX-XXXX-XXXX
-                return '+60 ' + phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
+                // 11 digits: XX-XXXX-XXXX
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
             }
         }
 
         // Phone input formatting
         const phoneField = document.getElementById('phoneField');
+        const phoneWrapper = document.getElementById('phoneWrapper');
+        
         phoneField.addEventListener('input', function(e) {
             const cursorPosition = e.target.selectionStart;
             const oldValue = e.target.value;
             
-            // Count digits (excluding +60 prefix) before cursor
+            // Count digits before cursor
             const beforeCursor = oldValue.substring(0, cursorPosition);
-            // Remove +60 and count digits - handle both "+60 " and just digits
-            let digitsBeforeCursor = beforeCursor.replace(/^\+60\s?/i, '').replace(/\D/g, '').length;
+            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
             
-            // Also remove any leading 60 digits if user typed them
+            // Remove leading 60 if user typed it
             const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
             if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
                 digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
@@ -590,18 +634,14 @@
             const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
             
-            // Calculate new cursor position based on digits before cursor (excluding +60)
-            // Find where in the formatted string we have 'digitsBeforeCursor' digits after +60
+            // Calculate new cursor position based on digits before cursor
             let newCursorPosition = 0;
             let digitCount = 0;
             
-            // Skip past "+60 " prefix (4 characters)
-            const prefixLength = formatted.startsWith('+60 ') ? 4 : 0;
-            
-            for (let i = prefixLength; i < formatted.length; i++) {
+            for (let i = 0; i < formatted.length; i++) {
                 const char = formatted[i];
                 
-                // Count digits after prefix
+                // Count digits
                 if (/\d/.test(char)) {
                     digitCount++;
                     
@@ -614,11 +654,16 @@
             }
             
             // If cursor was at end or we didn't find position, place it at end of formatted string
-            if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\+60\s?/i, '').replace(/\D/g, '').length) {
+            if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
                 newCursorPosition = formatted.length;
             }
             
             e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+        });
+        
+        // Handle focus state on wrapper
+        phoneField.addEventListener('focus', function() {
+            phoneWrapper.classList.remove('field-error');
         });
 
         // Email validation
@@ -691,13 +736,19 @@
                     
                     // CLEAR the duplicate field value
                     field.value = '';
-                    field.classList.add('field-error');
                     
-                    // Add appropriate placeholder based on field type
+                    // Add error styling - use wrapper for phone field
                     if (fieldName === 'phone') {
+                        const phoneWrapper = document.getElementById('phoneWrapper');
+                        if (phoneWrapper) {
+                            phoneWrapper.classList.add('field-error');
+                        }
                         field.placeholder = '⚠️ This number is already registered. Please use a different number.';
-                    } else if (fieldName === 'email') {
-                        field.placeholder = '⚠️ This email is already registered. Please use a different email.';
+                    } else {
+                        field.classList.add('field-error');
+                        if (fieldName === 'email') {
+                            field.placeholder = '⚠️ This email is already registered. Please use a different email.';
+                        }
                     }
                 }
             });
@@ -734,6 +785,11 @@
                     }
                 }
             });
+            // Clear phone wrapper error
+            const phoneWrapper = document.getElementById('phoneWrapper');
+            if (phoneWrapper) {
+                phoneWrapper.classList.remove('field-error');
+            }
             
             // Collect form data including checkboxes and radio buttons
             const formData = new FormData(this);
@@ -773,8 +829,8 @@
             }
             
             if (!validatePhone(data.phone)) {
-                showError('Please enter a valid Malaysian phone number (+60 XX-XXX-XXXX or +60 XX-XXXX-XXXX)');
-                document.getElementById('phoneField').classList.add('field-error');
+                showError('Please enter a valid Malaysian phone number (01-2345-6789 or 01-2345-67890)');
+                document.getElementById('phoneWrapper').classList.add('field-error');
                 document.getElementById('loading').classList.add('hidden');
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
@@ -934,6 +990,13 @@
                     const originalPlaceholder = this.getAttribute('data-original-placeholder');
                     if (originalPlaceholder) {
                         this.placeholder = originalPlaceholder;
+                    }
+                }
+                // Also remove error from phone wrapper if it's the phone field
+                if (this.id === 'phoneField') {
+                    const phoneWrapper = document.getElementById('phoneWrapper');
+                    if (phoneWrapper) {
+                        phoneWrapper.classList.remove('field-error');
                     }
                 }
             });
