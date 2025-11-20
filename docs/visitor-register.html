@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 600px;
@@ -19,18 +20,18 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
         }
-        
+
         h2 {
             text-align: center;
             color: #333;
             margin-bottom: 25px;
             font-size: 28px;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -38,7 +39,7 @@
             color: #555;
             font-size: 14px;
         }
-        
+
         input {
             width: 100%;
             padding: 12px;
@@ -48,13 +49,13 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        
+
         input:focus {
             outline: none;
             border-color: #25D366;
             box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
         }
-        
+
         .phone-input-wrapper {
             display: flex;
             align-items: center;
@@ -63,12 +64,12 @@
             background-color: #fff;
             transition: all 0.3s ease;
         }
-        
+
         .phone-input-wrapper:focus-within {
             border-color: #25D366;
             box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
         }
-        
+
         .phone-prefix {
             padding: 12px 8px 12px 12px;
             color: #666;
@@ -79,23 +80,23 @@
             background-color: #f5f5f5;
             border-radius: 8px 0 0 8px;
         }
-        
+
         .phone-input-wrapper input {
             border: none;
             border-radius: 0 8px 8px 0;
             flex: 1;
         }
-        
+
         .phone-input-wrapper input:focus {
             border: none;
             box-shadow: none;
         }
-        
+
         .phone-input-wrapper.field-error {
             border-color: #ff4444;
             box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
         }
-        
+
         button {
             background: #25D366;
             color: white;
@@ -109,30 +110,30 @@
             transition: all 0.3s ease;
             margin-top: 10px;
         }
-        
+
         button:hover:not(:disabled) {
             background: #128C7E;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
         }
-        
+
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .loading {
             text-align: center;
             color: #666;
             margin: 20px 0;
             font-size: 16px;
         }
-        
+
         .success-message {
             background: #d4edda;
             border: 1px solid #c3e6cb;
@@ -143,7 +144,7 @@
             text-align: center;
             font-weight: 600;
         }
-        
+
         .error-message {
             background: #fee;
             border: 1px solid #fcc;
@@ -154,24 +155,24 @@
             text-align: center;
             font-weight: 600;
         }
-        
+
         .field-error {
             border: 2px solid #ff4444 !important;
             background-color: #fff9f9 !important;
         }
-        
+
         .field-error:focus {
             outline: none;
             border-color: #ff4444 !important;
             box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
         }
-        
+
         .help-text {
             font-size: 12px;
             color: #666;
             margin-top: 4px;
         }
-        
+
         select {
             width: 100%;
             padding: 12px;
@@ -182,27 +183,29 @@
             transition: all 0.3s ease;
             background-color: #fff;
         }
-        
+
         select:focus {
             outline: none;
             border-color: #25D366;
             box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
         }
-        
+
         select:disabled {
             background-color: #f5f5f5;
             cursor: not-allowed;
             opacity: 0.6;
         }
-        
-        .radio-group, .checkbox-group {
+
+        .radio-group,
+        .checkbox-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
             margin-top: 8px;
         }
-        
-        .radio-option, .checkbox-option {
+
+        .radio-option,
+        .checkbox-option {
             display: flex;
             align-items: center;
             padding: 10px;
@@ -212,38 +215,39 @@
             transition: all 0.3s ease;
             background-color: #fff;
         }
-        
-        .radio-option:hover, .checkbox-option:hover {
+
+        .radio-option:hover,
+        .checkbox-option:hover {
             border-color: #25D366;
             background-color: #f0fdf4;
         }
-        
+
         .radio-option input[type="radio"],
         .checkbox-option input[type="checkbox"] {
             width: auto;
             margin-right: 10px;
             cursor: pointer;
         }
-        
-        .radio-option input[type="radio"]:checked + label,
-        .checkbox-option input[type="checkbox"]:checked + label {
+
+        .radio-option input[type="radio"]:checked+label,
+        .checkbox-option input[type="checkbox"]:checked+label {
             font-weight: 600;
             color: #25D366;
         }
-        
+
         .radio-option:has(input[type="radio"]:checked),
         .checkbox-option:has(input[type="checkbox"]:checked) {
             border-color: #25D366;
             background-color: #f0fdf4;
         }
-        
+
         .radio-option label,
         .checkbox-option label {
             margin: 0;
             cursor: pointer;
             flex: 1;
         }
-        
+
         .multi-select-container {
             display: flex;
             flex-direction: column;
@@ -255,7 +259,7 @@
             border-radius: 8px;
             background-color: #fff;
         }
-        
+
         .consent-section {
             background-color: #f8f9fa;
             border: 2px solid #ddd;
@@ -263,25 +267,25 @@
             padding: 15px;
             margin: 20px 0;
         }
-        
+
         .consent-section h3 {
             font-size: 16px;
             margin-bottom: 12px;
             color: #333;
         }
-        
+
         .consent-section ul {
             margin: 10px 0;
             padding-left: 20px;
         }
-        
+
         .consent-section li {
             margin: 8px 0;
             font-size: 14px;
             line-height: 1.5;
             color: #555;
         }
-        
+
         .consent-checkbox {
             display: flex;
             align-items: flex-start;
@@ -291,64 +295,62 @@
             border: 2px solid #ddd;
             border-radius: 8px;
         }
-        
+
         .consent-checkbox input[type="checkbox"] {
             width: auto;
             margin-right: 10px;
             margin-top: 3px;
         }
-        
+
         .consent-checkbox label {
             margin: 0;
             font-size: 14px;
             line-height: 1.5;
             cursor: pointer;
         }
-        
+
         .others-specify {
             margin-top: 10px;
             display: none;
         }
-        
+
         .others-specify.show {
             display: block;
         }
-        
+
         .others-specify input {
             width: 100%;
         }
     </style>
 </head>
+
 <body>
     <h2>🎪 Event Registration</h2>
-    
+
     <div id="messageContainer" style="scroll-margin-top: 20px;"></div>
-    
+
     <form id="registrationForm">
         <div class="form-group">
             <label for="nameField">Full Name *</label>
-            <input type="text" name="name" required id="nameField" 
-                   placeholder="Enter your full name" 
-                   aria-required="true">
+            <input type="text" name="name" required id="nameField" placeholder="Enter your full name"
+                aria-required="true">
         </div>
-        
+
         <div class="form-group">
             <label for="phoneField">Phone Number *</label>
             <div class="phone-input-wrapper" id="phoneWrapper">
                 <span class="phone-prefix">+60</span>
-                <input type="tel" name="phone" required id="phoneField" 
-                       placeholder="e.g., 01-2345-6789" 
-                       aria-required="true">
+                <input type="tel" name="phone" required id="phoneField" placeholder="e.g., 01-234-5678"
+                    aria-required="true">
             </div>
-            <div class="help-text">Format: 01-2345-6789 or 01-2345-67890</div>
+            <div class="help-text">Format: 01-234-5678 or 01-2345-6789</div>
         </div>
-        
+
         <div class="form-group">
             <label for="emailField">Email (Optional)</label>
-            <input type="email" name="email" id="emailField" 
-                   placeholder="your.email@example.com">
+            <input type="email" name="email" id="emailField" placeholder="your.email@example.com">
         </div>
-        
+
         <div class="form-group">
             <label>Gender *</label>
             <div class="radio-group">
@@ -366,7 +368,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label>Age Group *</label>
             <div class="radio-group">
@@ -396,7 +398,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label for="countryField">Country of Origin *</label>
             <select name="country" id="countryField" required>
@@ -425,7 +427,7 @@
                 <option value="Vietnam">Vietnam</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="stateField">State of Origin *</label>
             <select name="state" id="stateField" required>
@@ -448,7 +450,7 @@
                 <option value="WP Putrajaya">WP Putrajaya</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label>Monthly Salary Group *</label>
             <div class="radio-group">
@@ -470,7 +472,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label>Interest * (Select all that apply)</label>
             <div class="multi-select-container checkbox-group">
@@ -511,26 +513,33 @@
                 <input type="text" name="interest_others" id="interestOthersField" placeholder="Please specify">
             </div>
         </div>
-        
+
         <div class="consent-section">
             <h3>Data Protection & Consent</h3>
             <p>By clicking REGISTER, you agree to the following:</p>
             <ul>
-                <li><strong>Consent to Data Processing:</strong> Your personal data will be collected by Pintar Web Enterprise for the purposes of managing the grand prize draw and providing a report to the convention organizers and participating vendors.</li>
-                <li><strong>Anonymous Aggregation:</strong> Your data, along with other participants', may be used in an anonymous, aggregated form for event analysis and marketing research.</li>
-                <li><strong>Vendor Communication:</strong> By submitting your information, you agree that your name and email may be shared with the specific vendor(s) whose QR code you scanned so they can send you marketing materials.</li>
+                <li><strong>Consent to Data Processing:</strong> Your personal data will be collected by Pintar Web
+                    Enterprise for the purposes of managing the grand prize draw and providing a report to the
+                    convention organizers and participating vendors.</li>
+                <li><strong>Anonymous Aggregation:</strong> Your data, along with other participants', may be used in an
+                    anonymous, aggregated form for event analysis and marketing research.</li>
+                <li><strong>Vendor Communication:</strong> By submitting your information, you agree that your name and
+                    email may be shared with the specific vendor(s) whose QR code you scanned so they can send you
+                    marketing materials.</li>
             </ul>
             <p style="margin-top: 10px; font-size: 13px; color: #666;">
-                Your personal data will be processed in accordance with the Personal Data Protection Act (PDPA) 2010 of Malaysia. You have the right to access and correct your personal data. For more information, please contact us at <a href="mailto:admin@pintarweb.com.my">admin@pintarweb.com.my</a>.
+                Your personal data will be processed in accordance with the Personal Data Protection Act (PDPA) 2010 of
+                Malaysia. You have the right to access and correct your personal data. For more information, please
+                contact us at <a href="mailto:admin@pintarweb.com.my">admin@pintarweb.com.my</a>.
             </p>
             <div class="consent-checkbox">
                 <input type="checkbox" name="consent" id="consentField" required>
                 <label for="consentField">I have read and agree to the Data Protection & Consent terms above *</label>
             </div>
         </div>
-        
+
         <input type="hidden" name="vendor_id" id="vendorId">
-        
+
         <button type="submit" id="submitBtn">Register & Get Your Event Pass</button>
     </form>
 
@@ -539,16 +548,16 @@
     <script>
         // Configuration
         const N8N_WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook/visitor-register';
-        
+
         // Get vendor_id from URL
         const urlParams = new URLSearchParams(window.location.search);
         const vendorId = urlParams.get('vendor_id') || '';
         document.getElementById('vendorId').value = vendorId;
-        
+
         // Country/State logic - enable state only if country is Malaysia
         const countryField = document.getElementById('countryField');
         const stateField = document.getElementById('stateField');
-        
+
         function updateStateField() {
             if (countryField.value === 'Malaysia') {
                 stateField.disabled = false;
@@ -559,16 +568,16 @@
                 stateField.value = '';
             }
         }
-        
+
         countryField.addEventListener('change', updateStateField);
         updateStateField(); // Initialize on page load
-        
+
         // Handle "Others" interest checkbox
         const interestOthersCheckbox = document.getElementById('interestOthers');
         const othersSpecifyDiv = document.getElementById('othersSpecify');
         const interestOthersField = document.getElementById('interestOthersField');
-        
-        interestOthersCheckbox.addEventListener('change', function() {
+
+        interestOthersCheckbox.addEventListener('change', function () {
             if (this.checked) {
                 othersSpecifyDiv.classList.add('show');
                 interestOthersField.required = true;
@@ -583,32 +592,33 @@
         function formatPhoneNumber(value) {
             // Remove all non-digits
             let phoneNumber = value.replace(/\D/g, '');
-            
+
             // Remove leading 60 if user typed it (country code)
             if (phoneNumber.startsWith('60') && phoneNumber.length > 2) {
                 phoneNumber = phoneNumber.substring(2);
             }
-            
+
             // If no digits, return empty string
             if (phoneNumber.length === 0) {
                 return '';
             }
-            
+
             // Limit to 11 digits (Malaysian mobile numbers are max 11 digits)
             if (phoneNumber.length > 11) {
                 phoneNumber = phoneNumber.slice(0, 11);
             }
-            
-            // Format based on length (Malaysian format: XX-XXXX-XXXX for 10 digits, XX-XXXX-XXXX for 11 digits)
+
+            // Format based on length
             if (phoneNumber.length <= 2) {
                 return phoneNumber;
-            } else if (phoneNumber.length <= 6) {
+            } else if (phoneNumber.length <= 5) {
+                // XX-XXX...
                 return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
-            } else if (phoneNumber.length <= 10) {
-                // 10 digits: XX-XXXX-XXXX
-                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
+            } else if (phoneNumber.length <= 9) {
+                // 9 digits: XX-XXX-XXXX
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 5) + '-' + phoneNumber.slice(5);
             } else {
-                // 11 digits: XX-XXXX-XXXX
+                // 10+ digits: XX-XXXX-XXXX
                 return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
             }
         }
@@ -616,35 +626,35 @@
         // Phone input formatting
         const phoneField = document.getElementById('phoneField');
         const phoneWrapper = document.getElementById('phoneWrapper');
-        
-        phoneField.addEventListener('input', function(e) {
+
+        phoneField.addEventListener('input', function (e) {
             const cursorPosition = e.target.selectionStart;
             const oldValue = e.target.value;
-            
+
             // Count digits before cursor
             const beforeCursor = oldValue.substring(0, cursorPosition);
             let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-            
+
             // Remove leading 60 if user typed it
             const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
             if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
                 digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
             }
-            
+
             const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
-            
+
             // Calculate new cursor position based on digits before cursor
             let newCursorPosition = 0;
             let digitCount = 0;
-            
+
             for (let i = 0; i < formatted.length; i++) {
                 const char = formatted[i];
-                
+
                 // Count digits
                 if (/\d/.test(char)) {
                     digitCount++;
-                    
+
                     // If we've reached the number of digits that were before cursor
                     if (digitCount === digitsBeforeCursor) {
                         newCursorPosition = i + 1;
@@ -652,17 +662,17 @@
                     }
                 }
             }
-            
+
             // If cursor was at end or we didn't find position, place it at end of formatted string
             if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
                 newCursorPosition = formatted.length;
             }
-            
+
             e.target.setSelectionRange(newCursorPosition, newCursorPosition);
         });
-        
+
         // Handle focus state on wrapper
-        phoneField.addEventListener('focus', function() {
+        phoneField.addEventListener('focus', function () {
             phoneWrapper.classList.remove('field-error');
         });
 
@@ -681,19 +691,22 @@
             if (digitsOnly.startsWith('60')) {
                 digitsOnly = digitsOnly.substring(2);
             }
-            // Malaysian phone numbers: 10-11 digits (mobile: 01X-XXX-XXXX or 01X-XXXX-XXXX)
-            return digitsOnly.length >= 10 && digitsOnly.length <= 11;
+            // Malaysian phone numbers: 9-11 digits
+            // 9 digits: 01X-XXX-XXXX
+            // 10 digits: 01X-XXXX-XXXX
+            // 11 digits: 011-XXXX-XXXX
+            return digitsOnly.length >= 9 && digitsOnly.length <= 11;
         }
 
         // Helper function to show success messages
         function showSuccess(message) {
             const container = document.getElementById('messageContainer');
             container.innerHTML = '';
-            
+
             const successElement = document.createElement('div');
             successElement.className = 'success-message';
             successElement.textContent = message;
-            
+
             container.appendChild(successElement);
         }
 
@@ -701,14 +714,14 @@
         function showError(message) {
             const container = document.getElementById('messageContainer');
             container.innerHTML = '';
-            
+
             const errorElement = document.createElement('div');
             errorElement.className = 'error-message';
             errorElement.id = 'errorMessage';
             errorElement.textContent = message;
-            
+
             container.appendChild(errorElement);
-            
+
             // Scroll to error message
             setTimeout(() => {
                 errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -724,7 +737,7 @@
                     input.placeholder = input.getAttribute('data-original-placeholder') || '';
                 }
             });
-            
+
             // Clear and highlight each duplicate field
             duplicateFields.forEach(fieldName => {
                 const field = document.getElementById(fieldName + 'Field');
@@ -733,10 +746,10 @@
                     if (!field.getAttribute('data-original-placeholder')) {
                         field.setAttribute('data-original-placeholder', field.placeholder);
                     }
-                    
+
                     // CLEAR the duplicate field value
                     field.value = '';
-                    
+
                     // Add error styling - use wrapper for phone field
                     if (fieldName === 'phone') {
                         const phoneWrapper = document.getElementById('phoneWrapper');
@@ -752,7 +765,7 @@
                     }
                 }
             });
-            
+
             // Focus on first duplicate field
             if (duplicateFields.length > 0) {
                 const firstField = document.getElementById(duplicateFields[0] + 'Field');
@@ -763,17 +776,17 @@
         }
 
         // Form submission handler
-        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        document.getElementById('registrationForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const originalBtnText = submitBtn.textContent;
-            
+
             // Show loading
             document.getElementById('loading').classList.remove('hidden');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
-            
+
             // Clear any previous messages and field highlights
             document.getElementById('messageContainer').innerHTML = '';
             document.querySelectorAll('input').forEach(input => {
@@ -790,11 +803,11 @@
             if (phoneWrapper) {
                 phoneWrapper.classList.remove('field-error');
             }
-            
+
             // Collect form data including checkboxes and radio buttons
             const formData = new FormData(this);
             const data = {};
-            
+
             // Get all form fields
             for (const [key, value] of formData.entries()) {
                 if (key === 'interest') {
@@ -807,17 +820,17 @@
                     data[key] = value;
                 }
             }
-            
+
             // Convert interest array to comma-separated string for API
             if (data.interest && Array.isArray(data.interest)) {
                 data.interest = data.interest.join(',');
             }
-            
+
             // Add interest_others if "Others" is selected
             if (data.interest && data.interest.includes('Others') && data.interest_others) {
                 data.interest = data.interest.replace('Others', `Others: ${data.interest_others}`);
             }
-            
+
             // Client-side validation
             if (!data.name || data.name.trim().length < 2) {
                 showError('Please enter a valid name (at least 2 characters)');
@@ -827,16 +840,16 @@
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             if (!validatePhone(data.phone)) {
-                showError('Please enter a valid Malaysian phone number (01-2345-6789 or 01-2345-67890)');
+                showError('Please enter a valid Malaysian phone number (01-234-5678 or 01-2345-6789)');
                 document.getElementById('phoneWrapper').classList.add('field-error');
                 document.getElementById('loading').classList.add('hidden');
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             if (data.email && !validateEmail(data.email)) {
                 showError('Please enter a valid email address');
                 document.getElementById('emailField').classList.add('field-error');
@@ -845,7 +858,7 @@
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             // Validate at least one interest is selected
             const interests = formData.getAll('interest');
             if (!interests || interests.length === 0) {
@@ -855,7 +868,7 @@
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             // Validate "Others" interest has specification
             if (interests.includes('Others') && !data.interest_others?.trim()) {
                 showError('Please specify your interest in the "Others" field');
@@ -865,7 +878,7 @@
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             // Validate consent
             if (!data.consent) {
                 showError('Please agree to the Data Protection & Consent terms');
@@ -875,7 +888,7 @@
                 submitBtn.textContent = originalBtnText;
                 return;
             }
-            
+
             // Clean phone number (remove formatting and country code for API)
             // Remove all non-digits, then remove leading 60 if present
             let cleanedPhone = data.phone.replace(/\D/g, '');
@@ -883,18 +896,18 @@
                 cleanedPhone = cleanedPhone.substring(2);
             }
             data.phone = cleanedPhone;
-            
+
             try {
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
                 });
-                
+
                 console.log('Response status:', response.status);
-                
+
                 let result;
                 try {
                     result = await response.json();
@@ -907,12 +920,12 @@
                     submitBtn.textContent = originalBtnText;
                     return;
                 }
-                
+
                 if (response.ok) {
                     // Handle duplicate errors
                     if (result.success === false) {
                         let errorMessage = result.message || 'Registration failed';
-                        
+
                         // Handle all three duplicate conditions
                         if (result.error === "duplicate_phone") {
                             errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
@@ -930,17 +943,17 @@
                             // Fallback: use duplicate_fields array if available
                             handleDuplicateFields(result.duplicate_fields);
                         }
-                        
+
                         showError(errorMessage);
                         document.getElementById('loading').classList.add('hidden');
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalBtnText;
                         return;
                     }
-                    
+
                     // SUCCESS - show message and redirect
                     showSuccess('✅ Registration successful! Redirecting to your pass...');
-                    
+
                     // Save form data to localStorage for persistence
                     localStorage.setItem('last_registration', JSON.stringify({
                         name: data.name,
@@ -948,23 +961,23 @@
                         email: data.email,
                         timestamp: new Date().toISOString()
                     }));
-                    
+
                     // Redirect to pass page
                     const visitorName = data.name || result.name || 'Visitor';
-                    const passUrl = result.pass_url || 
+                    const passUrl = result.pass_url ||
                         `https://pintarweb.github.io/event-data-system/pass.html?visitor_id=${result.visitor_id}`;
-                    
+
                     // Build complete URL with all parameters
                     const url = new URL(passUrl);
                     url.searchParams.set('name', visitorName);
                     if (data.phone) url.searchParams.set('phone', data.phone);
                     if (data.email) url.searchParams.set('email', data.email);
                     if (result.total_points) url.searchParams.set('total_point', result.total_points);
-                    
+
                     setTimeout(() => {
                         window.location.href = url.toString();
                     }, 1500);
-                    
+
                 } else {
                     // Handle HTTP errors
                     const errorMsg = result.message || 'Registration failed. Please check your information and try again.';
@@ -984,7 +997,7 @@
 
         // Remove error styling when user starts typing in any field
         document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 if (this.classList.contains('field-error')) {
                     this.classList.remove('field-error');
                     const originalPlaceholder = this.getAttribute('data-original-placeholder');
@@ -1003,7 +1016,7 @@
         });
 
         // Restore form data from localStorage if available
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             const saved = localStorage.getItem('last_registration');
             if (saved) {
                 try {
@@ -1023,4 +1036,5 @@
         });
     </script>
 </body>
+
 </html>
