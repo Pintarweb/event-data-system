@@ -176,6 +176,108 @@
             margin-top: 4px;
         }
 
+        /* Certificate Styles */
+        .certificate-container {
+            display: none;
+            /* Hidden by default */
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 8px double #DAA520;
+            /* Golden border */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .certificate-container.show {
+            display: block;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cert-header {
+            font-family: 'Georgia', serif;
+            color: #DAA520;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cert-title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Georgia', serif;
+        }
+
+        .cert-body {
+            margin: 20px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .cert-details {
+            margin-top: 25px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .cert-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 5px;
+        }
+
+        .cert-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .cert-label {
+            font-weight: 600;
+            color: #777;
+        }
+
+        .cert-value {
+            font-weight: bold;
+            color: #333;
+            text-align: right;
+        }
+
+        .cert-footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
         @media (max-width: 480px) {
             body {
                 padding: 16px 14px 32px;
@@ -184,15 +286,25 @@
             h2 {
                 font-size: 24px;
             }
+
+            .cert-title {
+                font-size: 24px;
+            }
+
+            .cert-header {
+                font-size: 18px;
+            }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
-    <h2>🏢 Vendor Registration</h2>
+    <h2 id="pageTitle">🏢 Vendor Registration</h2>
 
     <div id="messageContainer" style="scroll-margin-top: 20px;"></div>
 
+    <!-- Registration Form -->
     <form id="vendorForm">
         <div class="form-group">
             <label for="vendorName">Vendor Name *</label>
@@ -256,6 +368,45 @@
 
     <div id="loading" class="hidden loading">⏳ Submitting vendor details...</div>
 
+    <!-- Certificate Container -->
+    <div id="certificateContainer" class="certificate-container">
+        <div class="success-icon">✅</div>
+        <div class="cert-header">Certificate of Registration</div>
+        <div class="cert-title">Congratulations!</div>
+        <div class="cert-body">
+            <p>You have successfully registered as a vendor for the event.</p>
+            <p>We are thrilled to have you on board!</p>
+        </div>
+
+        <div class="cert-details">
+            <div class="cert-row">
+                <span class="cert-label">Vendor Name:</span>
+                <span class="cert-value" id="certVendorName"></span>
+            </div>
+            <div class="cert-row">
+                <span class="cert-label">Business Type:</span>
+                <span class="cert-value" id="certBusinessType"></span>
+            </div>
+            <div class="cert-row">
+                <span class="cert-label">Contact Person:</span>
+                <span class="cert-value" id="certContactPerson"></span>
+            </div>
+            <div class="cert-row">
+                <span class="cert-label">Registration ID:</span>
+                <span class="cert-value" id="certRegId">PENDING</span>
+            </div>
+            <div class="cert-row">
+                <span class="cert-label">Date:</span>
+                <span class="cert-value" id="certDate"></span>
+            </div>
+        </div>
+
+        <div class="cert-footer">
+            <p>Please keep this for your records.</p>
+            <p>A confirmation email has been sent to <span id="certEmail"></span>.</p>
+        </div>
+    </div>
+
     <script>
         const WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook/vendor-register';
 
@@ -263,8 +414,10 @@
         const submitBtn = document.getElementById('submitBtn');
         const loadingIndicator = document.getElementById('loading');
         const messageContainer = document.getElementById('messageContainer');
+        const pageTitle = document.getElementById('pageTitle');
+        const certificateContainer = document.getElementById('certificateContainer');
 
-        // Helper: show success message
+        // Helper: show success message (used for simple feedback if needed, but we are using cert now)
         function showSuccess(message) {
             messageContainer.innerHTML = '';
             const success = document.createElement('div');
@@ -290,64 +443,40 @@
 
         // Helper: basic email validation
         function validateEmail(email) {
-            if (!email) return true; // Email is optional in visitor, but required here? Let's check form. It says required.
+            if (!email) return true;
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
 
-        // Phone number formatting (returns only the Malaysian number part, without +60)
+        // Phone number formatting
         function formatPhoneNumber(value) {
-            // Remove all non-digits
             let phoneNumber = value.replace(/\D/g, '');
-
-            // Remove leading 60 if user typed it (country code)
             if (phoneNumber.startsWith('60') && phoneNumber.length > 2) {
                 phoneNumber = phoneNumber.substring(2);
             }
+            if (phoneNumber.length === 0) return '';
+            if (phoneNumber.length > 11) phoneNumber = phoneNumber.slice(0, 11);
 
-            // If no digits, return empty string
-            if (phoneNumber.length === 0) {
-                return '';
-            }
-
-            // Limit to 11 digits (Malaysian mobile numbers are max 11 digits)
-            if (phoneNumber.length > 11) {
-                phoneNumber = phoneNumber.slice(0, 11);
-            }
-
-            // Format based on length
             if (phoneNumber.length <= 2) {
                 return phoneNumber;
             } else if (phoneNumber.length <= 5) {
-                // XX-XXX...
                 return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
             } else if (phoneNumber.length <= 9) {
-                // 9 digits: XX-XXX-XXXX
                 return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 5) + '-' + phoneNumber.slice(5);
             } else {
-                // 10+ digits: XX-XXXX-XXXX
                 return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
             }
         }
 
         // Phone validation
         function validatePhone(phone) {
-            // Remove +60 and get only the Malaysian phone digits
             let digitsOnly = phone.replace(/\D/g, '');
-            // Remove leading 60 if present (country code)
-            if (digitsOnly.startsWith('60')) {
-                digitsOnly = digitsOnly.substring(2);
-            }
-            // Malaysian phone numbers: 9-11 digits
-            // 9 digits: 01X-XXX-XXXX
-            // 10 digits: 01X-XXXX-XXXX
-            // 11 digits: 011-XXXX-XXXX
+            if (digitsOnly.startsWith('60')) digitsOnly = digitsOnly.substring(2);
             return digitsOnly.length >= 9 && digitsOnly.length <= 11;
         }
 
         // Helper function to clear and highlight duplicate fields
         function handleDuplicateFields(duplicateFields) {
-            // Remove highlights from all fields first
             form.querySelectorAll('input').forEach(input => {
                 input.classList.remove('field-error');
                 if (input.dataset.originalPlaceholder) {
@@ -355,13 +484,10 @@
                 }
             });
 
-            // Clear phone wrapper error
             const phoneWrapper = document.getElementById('phoneWrapper');
             if (phoneWrapper) phoneWrapper.classList.remove('field-error');
 
-            // Clear and highlight each duplicate field
             duplicateFields.forEach(fieldName => {
-                // Map backend field names to IDs
                 let fieldId = '';
                 if (fieldName === 'contact_phone' || fieldName === 'phone') fieldId = 'contactPhone';
                 else if (fieldName === 'email') fieldId = 'emailAddress';
@@ -369,20 +495,14 @@
 
                 const field = document.getElementById(fieldId);
                 if (field) {
-                    // Store original placeholder
                     if (!field.dataset.originalPlaceholder) {
                         field.dataset.originalPlaceholder = field.placeholder;
                     }
-
-                    // CLEAR the duplicate field value
                     field.value = '';
 
-                    // Add error styling
                     if (fieldId === 'contactPhone') {
                         const phoneWrapper = document.getElementById('phoneWrapper');
-                        if (phoneWrapper) {
-                            phoneWrapper.classList.add('field-error');
-                        }
+                        if (phoneWrapper) phoneWrapper.classList.add('field-error');
                         field.placeholder = '⚠️ This number is already registered. Please use a different number.';
                     } else {
                         field.classList.add('field-error');
@@ -395,7 +515,6 @@
                 }
             });
 
-            // Focus on first duplicate field
             if (duplicateFields.length > 0) {
                 let firstFieldId = '';
                 if (duplicateFields[0] === 'contact_phone' || duplicateFields[0] === 'phone') firstFieldId = 'contactPhone';
@@ -403,9 +522,7 @@
                 else if (duplicateFields[0] === 'vendor_name') firstFieldId = 'vendorName';
 
                 const firstField = document.getElementById(firstFieldId);
-                if (firstField) {
-                    setTimeout(() => firstField.focus(), 100);
-                }
+                if (firstField) setTimeout(() => firstField.focus(), 100);
             }
         }
 
@@ -416,12 +533,8 @@
         phoneField.addEventListener('input', function (e) {
             const cursorPosition = e.target.selectionStart;
             const oldValue = e.target.value;
-
-            // Count digits before cursor
             const beforeCursor = oldValue.substring(0, cursorPosition);
             let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-
-            // Remove leading 60 if user typed it
             const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
             if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
                 digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
@@ -430,39 +543,28 @@
             const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
 
-            // Calculate new cursor position based on digits before cursor
             let newCursorPosition = 0;
             let digitCount = 0;
-
             for (let i = 0; i < formatted.length; i++) {
                 const char = formatted[i];
-
-                // Count digits
                 if (/\d/.test(char)) {
                     digitCount++;
-
-                    // If we've reached the number of digits that were before cursor
                     if (digitCount === digitsBeforeCursor) {
                         newCursorPosition = i + 1;
                         break;
                     }
                 }
             }
-
-            // If cursor was at end or we didn't find position, place it at end of formatted string
             if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
                 newCursorPosition = formatted.length;
             }
-
             e.target.setSelectionRange(newCursorPosition, newCursorPosition);
         });
 
-        // Handle focus state on wrapper
         phoneField.addEventListener('focus', function () {
             phoneWrapper.classList.remove('field-error');
         });
 
-        // Remove error state on input
         form.querySelectorAll('input, select').forEach(el => {
             el.addEventListener('input', () => {
                 el.classList.remove('field-error');
@@ -472,7 +574,6 @@
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            // Clear previous errors
             messageContainer.innerHTML = '';
             form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
             if (phoneWrapper) phoneWrapper.classList.remove('field-error');
@@ -480,7 +581,6 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Validation
             let hasError = false;
 
             if (!data.vendor_name?.trim()) {
@@ -510,9 +610,7 @@
                 hasError = true;
             }
 
-            if (hasError) {
-                return;
-            }
+            if (hasError) return;
 
             // Normalize phone for submission
             data.contact_phone = data.contact_phone.replace(/\D/g, '');
@@ -524,12 +622,10 @@
                 }
             }
 
-            // Update UI
             loadingIndicator.classList.remove('hidden');
             const originalBtnText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
-            let registrationSucceeded = false;
 
             try {
                 const response = await fetch(WEBHOOK_URL, {
@@ -541,11 +637,9 @@
                 const result = await response.json().catch(() => ({}));
 
                 if (response.ok) {
-                    // Handle duplicate errors
                     if (result.success === false) {
                         let errorMessage = result.message || 'Vendor registration failed';
 
-                        // Handle all duplicate conditions
                         if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
                             errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
                             handleDuplicateFields(['contact_phone']);
@@ -563,7 +657,6 @@
                             handleDuplicateFields(['vendor_name']);
                         }
                         else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                            // Fallback: use duplicate_fields array if available
                             handleDuplicateFields(result.duplicate_fields);
                         }
 
@@ -574,21 +667,59 @@
                         return;
                     }
 
-                    // SUCCESS
-                    registrationSucceeded = true;
-                    showSuccess('✅ Vendor registered successfully!');
-
-                    form.reset(); // Reset fields
-
+                    // SUCCESS - Show Certificate
                     loadingIndicator.classList.add('hidden');
+                    form.style.display = 'none'; // Hide form
+                    pageTitle.style.display = 'none'; // Hide title
 
-                    // Change button state
-                    submitBtn.textContent = 'Vendor Registered';
-                    submitBtn.disabled = true;
-                    submitBtn.style.backgroundColor = '#ccc';
+                    // Populate Certificate
+                    document.getElementById('certVendorName').textContent = data.vendor_name;
+                    document.getElementById('certBusinessType').textContent = data.business_type;
+                    document.getElementById('certContactPerson').textContent = data.contact_person;
+                    document.getElementById('certEmail').textContent = data.email;
+                    document.getElementById('certDate').textContent = new Date().toLocaleDateString();
+
+                    // If backend returns an ID, use it
+                    const vendorId = result.id || result.vendor_id;
+                    if (vendorId) {
+                        document.getElementById('certRegId').textContent = vendorId;
+                    } else {
+                        document.getElementById('certRegId').textContent = 'V-' + Math.floor(1000 + Math.random() * 9000);
+                    }
+
+                    certificateContainer.classList.add('show');
+
+                    // Generate and upload certificate
+                    setTimeout(async () => {
+                        try {
+                            // Wait for fonts and layout
+                            const canvas = await html2canvas(certificateContainer, {
+                                scale: 2,
+                                useCORS: true,
+                                logging: false,
+                                backgroundColor: '#ffffff'
+                            });
+
+                            const imageData = canvas.toDataURL('image/png');
+
+                            // Send to backend to save
+                            await fetch(WEBHOOK_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'save_certificate',
+                                    vendor_id: vendorId,
+                                    certificate_image: imageData
+                                })
+                            });
+                            console.log('Certificate sent to backend');
+
+                        } catch (e) {
+                            console.error('Error generating/sending certificate:', e);
+                        }
+                    }, 1000);
 
                 } else {
-                    // Handle HTTP errors
                     const errorMsg = result.message || 'Vendor registration failed. Please check your information and try again.';
                     showError(errorMsg);
                     loadingIndicator.classList.add('hidden');

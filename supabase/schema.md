@@ -10,6 +10,7 @@
 | vendors           | vendor_name       | text                     | NO          |
 | vendors           | booth_number      | text                     | YES         |
 | vendors           | qr_code           | text                     | YES         |
+| vendors           | certificate_url   | text                     | YES         |
 | vendors           | created_at        | timestamp with time zone | YES         |
 | visitors          | id                | uuid                     | NO          |
 | visitors          | name              | text                     | NO          |
