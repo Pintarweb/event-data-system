@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 520px;
@@ -19,18 +20,18 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
         }
-        
+
         h2 {
             text-align: center;
             color: #333;
             margin-bottom: 25px;
             font-size: 28px;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -38,8 +39,9 @@
             color: #555;
             font-size: 14px;
         }
-        
-        input, select {
+
+        input,
+        select {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
@@ -49,13 +51,55 @@
             transition: all 0.3s ease;
             background-color: #fff;
         }
-        
-        input:focus, select:focus {
+
+        input:focus,
+        select:focus {
             outline: none;
             border-color: #25D366;
             box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
         }
-        
+
+        .phone-input-wrapper {
+            display: flex;
+            align-items: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .phone-input-wrapper:focus-within {
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .phone-prefix {
+            padding: 12px 8px 12px 12px;
+            color: #666;
+            font-size: 16px;
+            user-select: none;
+            pointer-events: none;
+            border-right: 1px solid #ddd;
+            background-color: #f5f5f5;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .phone-input-wrapper input {
+            border: none;
+            border-radius: 0 8px 8px 0;
+            flex: 1;
+        }
+
+        .phone-input-wrapper input:focus {
+            border: none;
+            box-shadow: none;
+        }
+
+        .phone-input-wrapper.field-error {
+            border-color: #ff4444;
+            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+        }
+
         button {
             background: #25D366;
             color: white;
@@ -69,29 +113,30 @@
             transition: all 0.3s ease;
             margin-top: 10px;
         }
-        
+
         button:hover:not(:disabled) {
             background: #128C7E;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
         }
-        
+
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
+            transform: none;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .loading {
             text-align: center;
             color: #666;
             margin: 20px 0;
             font-size: 16px;
         }
-        
+
         .success-message {
             background: #d4edda;
             border: 1px solid #c3e6cb;
@@ -102,7 +147,7 @@
             text-align: center;
             font-weight: 600;
         }
-        
+
         .error-message {
             background: #fee;
             border: 1px solid #fcc;
@@ -113,40 +158,47 @@
             text-align: center;
             font-weight: 600;
         }
-        
+
         .field-error {
             border: 2px solid #ff4444 !important;
             background-color: #fff9f9 !important;
         }
-        
+
         .field-error:focus {
             outline: none;
             border-color: #ff4444 !important;
             box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
         }
-        
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
         @media (max-width: 480px) {
             body {
                 padding: 16px 14px 32px;
             }
-            
+
             h2 {
                 font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <h2>🏢 Vendor Registration</h2>
-    
-    <div id="messageContainer"></div>
-    
+
+    <div id="messageContainer" style="scroll-margin-top: 20px;"></div>
+
     <form id="vendorForm">
         <div class="form-group">
             <label for="vendorName">Vendor Name *</label>
             <input type="text" id="vendorName" name="vendor_name" required placeholder="Enter vendor name">
         </div>
-        
+
         <div class="form-group">
             <label for="businessType">Business Type *</label>
             <select id="businessType" name="business_type" required>
@@ -161,12 +213,13 @@
                 <option value="Beauty">Beauty</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="contactPerson">Contact Person *</label>
-            <input type="text" id="contactPerson" name="contact_person" required placeholder="Full name of contact person">
+            <input type="text" id="contactPerson" name="contact_person" required
+                placeholder="Full name of contact person">
         </div>
-        
+
         <div class="form-group">
             <label for="designation">Designation *</label>
             <select id="designation" name="designation" required>
@@ -177,35 +230,40 @@
                 <option value="Staff">Staff</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="contactPhone">Contact Phone *</label>
-            <input type="tel" id="contactPhone" name="contact_phone" required placeholder="e.g. 012-345-6789">
+            <div class="phone-input-wrapper" id="phoneWrapper">
+                <span class="phone-prefix">+60</span>
+                <input type="tel" id="contactPhone" name="contact_phone" required placeholder="e.g., 01-234-5678"
+                    aria-required="true">
+            </div>
+            <div class="help-text">Format: 01-234-5678 or 01-2345-6789</div>
         </div>
-        
+
         <div class="form-group">
             <label for="emailAddress">Email Address *</label>
             <input type="email" id="emailAddress" name="email" required placeholder="contact@company.com">
         </div>
-        
+
         <div class="form-group">
             <label for="companyWebsite">Company Website</label>
             <input type="text" id="companyWebsite" name="company_website" placeholder="example.com">
         </div>
-        
+
         <button type="submit" id="submitBtn">Register Vendor</button>
     </form>
-    
+
     <div id="loading" class="hidden loading">⏳ Submitting vendor details...</div>
 
     <script>
         const WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook/vendor-register';
-        
+
         const form = document.getElementById('vendorForm');
         const submitBtn = document.getElementById('submitBtn');
         const loadingIndicator = document.getElementById('loading');
         const messageContainer = document.getElementById('messageContainer');
-        
+
         // Helper: show success message
         function showSuccess(message) {
             messageContainer.innerHTML = '';
@@ -214,109 +272,217 @@
             success.textContent = message;
             messageContainer.appendChild(success);
         }
-        
+
         // Helper: show error message
         function showError(message) {
             messageContainer.innerHTML = '';
             const error = document.createElement('div');
             error.className = 'error-message';
+            error.id = 'errorMessage';
             error.textContent = message;
             messageContainer.appendChild(error);
-        }
-        
-        // Helper: basic email validation
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-        
-        // Helper: basic phone validation (strip non-digits, check length)
-        function normalizePhone(phone) {
-            return phone.replace(/\D/g, '');
-        }
-        
-        function isValidPhone(phone) {
-            const digits = normalizePhone(phone);
-            return digits.length >= 10 && digits.length <= 15;
-        }
-        
-        // Helper: clear field errors
-        function clearFieldErrors() {
-            messageContainer.innerHTML = '';
-            form.querySelectorAll('.field-error').forEach(el => {
-                el.classList.remove('field-error');
-                if (el.dataset?.originalPlaceholder) {
-                    el.placeholder = el.dataset.originalPlaceholder;
-                }
-            });
+
+            // Scroll to error message
+            setTimeout(() => {
+                error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
 
-        function handleDuplicateFields(fields = []) {
-            const fieldMap = {
-                email: document.getElementById('emailAddress'),
-                vendor_name: document.getElementById('vendorName'),
-                contact_phone: document.getElementById('contactPhone'),
-                phone: document.getElementById('contactPhone')
-            };
-            
-            const placeholderMap = {
-                email: '📧 This email is already registered.',
-                vendor_name: '🏷️ Vendor name already registered.',
-                contact_phone: '📱 This phone is already registered.',
-                phone: '📱 This phone is already registered.'
-            };
-            
-            let firstField = null;
-            
-            fields.forEach(fieldName => {
-                const field = fieldMap[fieldName];
+        // Helper: basic email validation
+        function validateEmail(email) {
+            if (!email) return true; // Email is optional in visitor, but required here? Let's check form. It says required.
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Phone number formatting (returns only the Malaysian number part, without +60)
+        function formatPhoneNumber(value) {
+            // Remove all non-digits
+            let phoneNumber = value.replace(/\D/g, '');
+
+            // Remove leading 60 if user typed it (country code)
+            if (phoneNumber.startsWith('60') && phoneNumber.length > 2) {
+                phoneNumber = phoneNumber.substring(2);
+            }
+
+            // If no digits, return empty string
+            if (phoneNumber.length === 0) {
+                return '';
+            }
+
+            // Limit to 11 digits (Malaysian mobile numbers are max 11 digits)
+            if (phoneNumber.length > 11) {
+                phoneNumber = phoneNumber.slice(0, 11);
+            }
+
+            // Format based on length
+            if (phoneNumber.length <= 2) {
+                return phoneNumber;
+            } else if (phoneNumber.length <= 5) {
+                // XX-XXX...
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2);
+            } else if (phoneNumber.length <= 9) {
+                // 9 digits: XX-XXX-XXXX
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 5) + '-' + phoneNumber.slice(5);
+            } else {
+                // 10+ digits: XX-XXXX-XXXX
+                return phoneNumber.slice(0, 2) + '-' + phoneNumber.slice(2, 6) + '-' + phoneNumber.slice(6);
+            }
+        }
+
+        // Phone validation
+        function validatePhone(phone) {
+            // Remove +60 and get only the Malaysian phone digits
+            let digitsOnly = phone.replace(/\D/g, '');
+            // Remove leading 60 if present (country code)
+            if (digitsOnly.startsWith('60')) {
+                digitsOnly = digitsOnly.substring(2);
+            }
+            // Malaysian phone numbers: 9-11 digits
+            // 9 digits: 01X-XXX-XXXX
+            // 10 digits: 01X-XXXX-XXXX
+            // 11 digits: 011-XXXX-XXXX
+            return digitsOnly.length >= 9 && digitsOnly.length <= 11;
+        }
+
+        // Helper function to clear and highlight duplicate fields
+        function handleDuplicateFields(duplicateFields) {
+            // Remove highlights from all fields first
+            form.querySelectorAll('input').forEach(input => {
+                input.classList.remove('field-error');
+                if (input.dataset.originalPlaceholder) {
+                    input.placeholder = input.dataset.originalPlaceholder;
+                }
+            });
+
+            // Clear phone wrapper error
+            const phoneWrapper = document.getElementById('phoneWrapper');
+            if (phoneWrapper) phoneWrapper.classList.remove('field-error');
+
+            // Clear and highlight each duplicate field
+            duplicateFields.forEach(fieldName => {
+                // Map backend field names to IDs
+                let fieldId = '';
+                if (fieldName === 'contact_phone' || fieldName === 'phone') fieldId = 'contactPhone';
+                else if (fieldName === 'email') fieldId = 'emailAddress';
+                else if (fieldName === 'vendor_name') fieldId = 'vendorName';
+
+                const field = document.getElementById(fieldId);
                 if (field) {
+                    // Store original placeholder
                     if (!field.dataset.originalPlaceholder) {
-                        field.dataset.originalPlaceholder = field.placeholder || '';
+                        field.dataset.originalPlaceholder = field.placeholder;
                     }
+
+                    // CLEAR the duplicate field value
                     field.value = '';
-                    field.classList.add('field-error');
-                    field.placeholder = placeholderMap[fieldName] || 'This value is already registered.';
-                    if (!firstField) {
-                        firstField = field;
+
+                    // Add error styling
+                    if (fieldId === 'contactPhone') {
+                        const phoneWrapper = document.getElementById('phoneWrapper');
+                        if (phoneWrapper) {
+                            phoneWrapper.classList.add('field-error');
+                        }
+                        field.placeholder = '⚠️ This number is already registered. Please use a different number.';
+                    } else {
+                        field.classList.add('field-error');
+                        if (fieldId === 'emailAddress') {
+                            field.placeholder = '⚠️ This email is already registered. Please use a different email.';
+                        } else if (fieldId === 'vendorName') {
+                            field.placeholder = '⚠️ This vendor name is already registered.';
+                        }
                     }
                 }
             });
-            
-            if (firstField) {
-                setTimeout(() => firstField.focus(), 100);
+
+            // Focus on first duplicate field
+            if (duplicateFields.length > 0) {
+                let firstFieldId = '';
+                if (duplicateFields[0] === 'contact_phone' || duplicateFields[0] === 'phone') firstFieldId = 'contactPhone';
+                else if (duplicateFields[0] === 'email') firstFieldId = 'emailAddress';
+                else if (duplicateFields[0] === 'vendor_name') firstFieldId = 'vendorName';
+
+                const firstField = document.getElementById(firstFieldId);
+                if (firstField) {
+                    setTimeout(() => firstField.focus(), 100);
+                }
             }
         }
-        
-        // Format phone as user types
-        const phoneInput = document.getElementById('contactPhone');
-        phoneInput.addEventListener('input', function(e) {
-            const cursor = e.target.selectionStart;
-            const digits = normalizePhone(e.target.value);
-            
-            let formatted = digits;
-            if (digits.length > 3 && digits.length <= 7) {
-                formatted = digits.slice(0, 3) + '-' + digits.slice(3);
-            } else if (digits.length > 7) {
-                formatted = digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+
+        // Phone input formatting
+        const phoneField = document.getElementById('contactPhone');
+        const phoneWrapper = document.getElementById('phoneWrapper');
+
+        phoneField.addEventListener('input', function (e) {
+            const cursorPosition = e.target.selectionStart;
+            const oldValue = e.target.value;
+
+            // Count digits before cursor
+            const beforeCursor = oldValue.substring(0, cursorPosition);
+            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+
+            // Remove leading 60 if user typed it
+            const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
+            if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
+                digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
             }
-            
+
+            const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
-            e.target.setSelectionRange(cursor, cursor);
+
+            // Calculate new cursor position based on digits before cursor
+            let newCursorPosition = 0;
+            let digitCount = 0;
+
+            for (let i = 0; i < formatted.length; i++) {
+                const char = formatted[i];
+
+                // Count digits
+                if (/\d/.test(char)) {
+                    digitCount++;
+
+                    // If we've reached the number of digits that were before cursor
+                    if (digitCount === digitsBeforeCursor) {
+                        newCursorPosition = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            // If cursor was at end or we didn't find position, place it at end of formatted string
+            if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
+                newCursorPosition = formatted.length;
+            }
+
+            e.target.setSelectionRange(newCursorPosition, newCursorPosition);
         });
-        
+
+        // Handle focus state on wrapper
+        phoneField.addEventListener('focus', function () {
+            phoneWrapper.classList.remove('field-error');
+        });
+
         // Remove error state on input
-        form.querySelectorAll('input, select').forEach(el => el.addEventListener('input', () => el.classList.remove('field-error')));
-        
-        form.addEventListener('submit', async function(e) {
+        form.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', () => {
+                el.classList.remove('field-error');
+            });
+        });
+
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            clearFieldErrors();
-            
+
+            // Clear previous errors
+            messageContainer.innerHTML = '';
+            form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            if (phoneWrapper) phoneWrapper.classList.remove('field-error');
+
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-            
+
             // Validation
             let hasError = false;
-            
+
             if (!data.vendor_name?.trim()) {
                 document.getElementById('vendorName').classList.add('field-error');
                 hasError = true;
@@ -333,51 +499,52 @@
                 document.getElementById('designation').classList.add('field-error');
                 hasError = true;
             }
-            if (!isValidPhone(data.contact_phone || '')) {
-                document.getElementById('contactPhone').classList.add('field-error');
-                showError('Please enter a valid contact phone number (10-15 digits).');
+            if (!validatePhone(data.contact_phone || '')) {
+                phoneWrapper.classList.add('field-error');
+                showError('Please enter a valid Malaysian phone number (01-234-5678 or 01-2345-6789)');
                 hasError = true;
             }
-            if (!isValidEmail(data.email || '')) {
+            if (!validateEmail(data.email || '')) {
                 document.getElementById('emailAddress').classList.add('field-error');
                 showError('Please enter a valid email address.');
                 hasError = true;
             }
-            
+
             if (hasError) {
                 return;
             }
-            
-            // Normalize phone
-            data.contact_phone = normalizePhone(data.contact_phone);
+
+            // Normalize phone for submission
+            data.contact_phone = data.contact_phone.replace(/\D/g, '');
+
             if (data.company_website) {
                 data.company_website = data.company_website.trim();
                 if (data.company_website !== '' && !/^https?:\/\//i.test(data.company_website)) {
                     data.company_website = `https://${data.company_website}`;
                 }
             }
-            
+
             // Update UI
             loadingIndicator.classList.remove('hidden');
             const originalBtnText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
             let registrationSucceeded = false;
-            
+
             try {
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
+
                 const result = await response.json().catch(() => ({}));
-                
+
                 if (response.ok) {
-                    // Handle duplicate errors (mirror visitor-register.html behavior)
+                    // Handle duplicate errors
                     if (result.success === false) {
                         let errorMessage = result.message || 'Vendor registration failed';
-                        
+
                         // Handle all duplicate conditions
                         if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
                             errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
@@ -399,21 +566,27 @@
                             // Fallback: use duplicate_fields array if available
                             handleDuplicateFields(result.duplicate_fields);
                         }
-                        
+
                         showError(errorMessage);
                         loadingIndicator.classList.add('hidden');
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalBtnText;
                         return;
                     }
-                    
-                    // SUCCESS - show message and reset form
+
+                    // SUCCESS
                     registrationSucceeded = true;
                     showSuccess('✅ Vendor registered successfully!');
-                    form.reset();
+
+                    form.reset(); // Reset fields
+
                     loadingIndicator.classList.add('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalBtnText;
+
+                    // Change button state
+                    submitBtn.textContent = 'Vendor Registered';
+                    submitBtn.disabled = true;
+                    submitBtn.style.backgroundColor = '#ccc';
+
                 } else {
                     // Handle HTTP errors
                     const errorMsg = result.message || 'Vendor registration failed. Please check your information and try again.';
@@ -425,14 +598,12 @@
             } catch (err) {
                 console.error(err);
                 showError('Network error. Please check your connection and try again.');
-            } finally {
                 loadingIndicator.classList.add('hidden');
-                if (!registrationSucceeded) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalBtnText;
-                }
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
         });
     </script>
 </body>
+
 </html>
