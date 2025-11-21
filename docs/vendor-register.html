@@ -408,7 +408,7 @@
     </div>
 
     <script>
-        const WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook/vendor-register';
+        const WEBHOOK_URL = 'https://n8n.pintarweb.com/webhook-test/vendor-register';
 
         const form = document.getElementById('vendorForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -617,22 +617,6 @@
 
             if (data.company_website) {
                 data.company_website = data.company_website.trim();
-                if (data.company_website !== '' && !/^https?:\/\//i.test(data.company_website)) {
-                    data.company_website = `https://${data.company_website}`;
-                }
-            }
-
-            loadingIndicator.classList.remove('hidden');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
 
                 const result = await response.json().catch(() => ({}));
 
