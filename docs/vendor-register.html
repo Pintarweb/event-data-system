@@ -666,58 +666,209 @@
                     // If backend returns an ID, use it
                     const vendorId = result.id || result.vendor_id;
                     if (vendorId) {
-                        document.getElementById('certRegId').textContent = vendorId;
-                    } else {
-                        document.getElementById('certRegId').textContent = 'V-' + Math.floor(1000 + Math.random() * 9000);
+                        if (digitsOnly.startsWith('60')) digitsOnly = digitsOnly.substring(2);
+                        return digitsOnly.length >= 9 && digitsOnly.length <= 11;
                     }
 
-                    certificateContainer.classList.add('show');
+                    // Helper function to clear and highlight duplicate fields
+                    function handleDuplicateFields(duplicateFields) {
+                        form.querySelectorAll('input').forEach(input => {
+                            input.classList.remove('field-error');
+                            if (input.dataset.originalPlaceholder) {
+                                input.placeholder = input.dataset.originalPlaceholder;
+                            }
+                        });
 
-                    // Generate and upload certificate
-                    setTimeout(async () => {
-                        try {
-                            // Wait for fonts and layout
-                            const canvas = await html2canvas(certificateContainer, {
-                                scale: 2,
-                                useCORS: true,
-                                logging: false,
-                                backgroundColor: '#ffffff'
-                            });
+                        const phoneWrapper = document.getElementById('phoneWrapper');
+                        if (phoneWrapper) phoneWrapper.classList.remove('field-error');
 
-                            const imageData = canvas.toDataURL('image/png');
+                        duplicateFields.forEach(fieldName => {
+                            let fieldId = '';
+                            if (fieldName === 'contact_phone' || fieldName === 'phone') fieldId = 'contactPhone';
+                            else if (fieldName === 'email') fieldId = 'emailAddress';
+                            else if (fieldName === 'vendor_name') fieldId = 'vendorName';
 
-                            // Send to backend to save
-                            await fetch(WEBHOOK_URL, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    action: 'save_certificate',
-                                    vendor_id: vendorId,
-                                    certificate_image: imageData
-                                })
-                            });
-                            console.log('Certificate sent to backend');
+                            const field = document.getElementById(fieldId);
+                            if (field) {
+                                if (!field.dataset.originalPlaceholder) {
+                                    field.dataset.originalPlaceholder = field.placeholder;
+                                }
+                                field.value = '';
 
-                        } catch (e) {
-                            console.error('Error generating/sending certificate:', e);
+                                if (fieldId === 'contactPhone') {
+                                    const phoneWrapper = document.getElementById('phoneWrapper');
+                                    if (phoneWrapper) phoneWrapper.classList.add('field-error');
+                                    field.placeholder = '⚠️ This number is already registered. Please use a different number.';
+                                } else {
+                                    field.classList.add('field-error');
+                                    if (fieldId === 'emailAddress') {
+                                        field.placeholder = '⚠️ This email is already registered. Please use a different email.';
+                                    } else if (fieldId === 'vendorName') {
+                                        field.placeholder = '⚠️ This vendor name is already registered.';
+                                    }
+                                }
+                            }
+                        });
+
+                        if (duplicateFields.length > 0) {
+                            let firstFieldId = '';
+                            if (duplicateFields[0] === 'contact_phone' || duplicateFields[0] === 'phone') firstFieldId = 'contactPhone';
+                            else if (duplicateFields[0] === 'email') firstFieldId = 'emailAddress';
+                            else if (duplicateFields[0] === 'vendor_name') firstFieldId = 'vendorName';
+
+                            const firstField = document.getElementById(firstFieldId);
+                            if (firstField) setTimeout(() => firstField.focus(), 100);
                         }
-                    }, 1000);
+                    }
 
-                } else {
-                    const errorMsg = result.message || 'Vendor registration failed. Please check your information and try again.';
-                    showError(errorMsg);
-                    loadingIndicator.classList.add('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalBtnText;
-                }
-            } catch (err) {
-                console.error(err);
-                showError('Network error. Please check your connection and try again.');
-                loadingIndicator.classList.add('hidden');
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalBtnText;
-            }
-        });
+                    // Phone input formatting
+                    const phoneField = document.getElementById('contactPhone');
+                    const phoneWrapper = document.getElementById('phoneWrapper');
+
+                    phoneField.addEventListener('input', function (e) {
+                        const cursorPosition = e.target.selectionStart;
+                        const oldValue = e.target.value;
+                        const beforeCursor = oldValue.substring(0, cursorPosition);
+                        let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                        const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
+                        if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
+                            digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
+                        }
+
+                        const formatted = formatPhoneNumber(e.target.value);
+                        e.target.value = formatted;
+
+                        let newCursorPosition = 0;
+                        let digitCount = 0;
+                        for (let i = 0; i < formatted.length; i++) {
+                            const char = formatted[i];
+                            if (/\d/.test(char)) {
+                                digitCount++;
+                                if (digitCount === digitsBeforeCursor) {
+                                    newCursorPosition = i + 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
+                            newCursorPosition = formatted.length;
+                        }
+                        e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                    });
+
+                    phoneField.addEventListener('focus', function () {
+                        phoneWrapper.classList.remove('field-error');
+                    });
+
+                    form.querySelectorAll('input, select').forEach(el => {
+                        el.addEventListener('input', () => {
+                            el.classList.remove('field-error');
+                        });
+                    });
+
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        messageContainer.innerHTML = '';
+                        form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+                        if (phoneWrapper) phoneWrapper.classList.remove('field-error');
+
+                        const formData = new FormData(form);
+                        const data = Object.fromEntries(formData.entries());
+
+                        let hasError = false;
+
+                        if (!data.vendor_name?.trim()) {
+                            document.getElementById('vendorName').classList.add('field-error');
+                            hasError = true;
+                        }
+                        if (!data.business_type) {
+                            document.getElementById('businessType').classList.add('field-error');
+                            hasError = true;
+                        }
+                        if (!data.contact_person?.trim()) {
+                            document.getElementById('contactPerson').classList.add('field-error');
+                            hasError = true;
+                        }
+                        if (!data.designation) {
+                            document.getElementById('designation').classList.add('field-error');
+                            hasError = true;
+                        }
+                        if (!validatePhone(data.contact_phone || '')) {
+                            phoneWrapper.classList.add('field-error');
+                            showError('Please enter a valid Malaysian phone number (01-234-5678 or 01-2345-6789)');
+                            hasError = true;
+                        }
+                        if (!validateEmail(data.email || '')) {
+                            document.getElementById('emailAddress').classList.add('field-error');
+                            showError('Please enter a valid email address.');
+                            hasError = true;
+                        }
+
+                        if (hasError) return;
+
+                        // Normalize phone for submission
+                        data.contact_phone = data.contact_phone.replace(/\D/g, '');
+
+                        if (data.company_website) {
+                            data.company_website = data.company_website.trim();
+
+                            const result = await response.json().catch(() => ({}));
+
+                            if (response.ok) {
+                                if (result.success === false) {
+                                    let errorMessage = result.message || 'Vendor registration failed';
+
+                                    if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
+                                        errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
+                                        handleDuplicateFields(['contact_phone']);
+                                    }
+                                    else if (result.error === "duplicate_email") {
+                                        errorMessage = "📧 This email address is already registered. Please enter a different email address.";
+                                        handleDuplicateFields(['email']);
+                                    }
+                                    else if (result.error === "duplicate_both") {
+                                        errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
+                                        handleDuplicateFields(['contact_phone', 'email']);
+                                    }
+                                    else if (result.error === "duplicate_name" || result.error === "duplicate_vendor_name") {
+                                        errorMessage = "🏷️ This vendor name is already registered. Please enter a different vendor name.";
+                                        handleDuplicateFields(['vendor_name']);
+                                    }
+                                    else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
+                                        handleDuplicateFields(result.duplicate_fields);
+                                    }
+
+                                    showError(errorMessage);
+                                    loadingIndicator.classList.add('hidden');
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = originalBtnText;
+                                    return;
+                                }
+
+                                // SUCCESS - Show Certificate
+                                loadingIndicator.classList.add('hidden');
+                                form.style.display = 'none'; // Hide form
+                                pageTitle.style.display = 'none'; // Hide title
+
+                                // Populate Certificate
+                                document.getElementById('certVendorName').textContent = data.vendor_name;
+                                document.getElementById('certBusinessType').textContent = data.business_type;
+                                document.getElementById('certContactPerson').textContent = data.contact_person;
+                                document.getElementById('certEmail').textContent = data.email;
+                                document.getElementById('certDate').textContent = new Date().toLocaleDateString();
+
+                                // If backend returns an ID, use it
+                                const vendorId = result.id || result.vendor_id;
+                                if (vendorId) {
+                                    document.getElementById('certRegId').textContent = vendorId;
+                                } else {
+                                    document.getElementById('certRegId').textContent = 'V-' + Math.floor(1000 + Math.random() * 9000);
+                                }
+
+                                certificateContainer.classList.add('show');
+
+        // Certificate generation/upload removed as per user request.
     </script>
 </body>
 

@@ -1,0 +1,231 @@
+{
+    "name": "Vendor Registration (Rollback)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "/vendor-register",
+                "responseMode": "responseNode",
+                "options": {
+                    "rawBody": false
+                }
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "webhook-node",
+            "name": "Webhook"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Extract form data\nconst body = $input.first().json.body;\n\nreturn [{\n  json: {\n    vendor_name: body.vendor_name,\n    business_type: body.business_type,\n    contact_person: body.contact_person,\n    designation: body.designation,\n    contact_phone: body.contact_phone,\n    email: body.email,\n    company_website: body.company_website,\n    created_at: new Date().toISOString()\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                250,
+                0
+            ],
+            "id": "prep-registration",
+            "name": "Prepare Registration"
+        },
+        {
+            "parameters": {
+                "tableId": "vendors",
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "vendor_name",
+                            "fieldValue": "={{ $json.vendor_name }}"
+                        },
+                        {
+                            "fieldId": "business_type",
+                            "fieldValue": "={{ $json.business_type }}"
+                        },
+                        {
+                            "fieldId": "contact_person",
+                            "fieldValue": "={{ $json.contact_person }}"
+                        },
+                        {
+                            "fieldId": "designation",
+                            "fieldValue": "={{ $json.designation }}"
+                        },
+                        {
+                            "fieldId": "contact_phone",
+                            "fieldValue": "={{ $json.contact_phone }}"
+                        },
+                        {
+                            "fieldId": "email",
+                            "fieldValue": "={{ $json.email }}"
+                        },
+                        {
+                            "fieldId": "company_website",
+                            "fieldValue": "={{ $json.company_website }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                450,
+                0
+            ],
+            "id": "insert-vendor",
+            "name": "Insert Vendor",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "Vs4fSTfqgDpewfc1",
+                    "name": "Supabase account"
+                }
+            },
+            "onError": "continueRegularOutput"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "check-duplicate-error",
+                            "leftValue": "={{ $json.error }}",
+                            "rightValue": "duplicate key",
+                            "operator": {
+                                "type": "string",
+                                "operation": "contains"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                650,
+                0
+            ],
+            "id": "check-duplicate",
+            "name": "Check Duplicate"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"success\": true,\n  \"vendor_id\": \"{{ $json.id }}\",\n  \"message\": \"Vendor registered successfully\"\n}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                900,
+                -100
+            ],
+            "id": "success-response",
+            "name": "Success Response"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Handle duplicate error\nconst error = $input.first().json.error;\nlet errorType = 'duplicate_unknown';\nlet message = 'Vendor already registered';\n\nif (error.includes('vendors_contact_phone_key')) {\n  errorType = 'duplicate_phone';\n  message = 'Phone number already registered';\n} else if (error.includes('vendors_email_key')) {\n  errorType = 'duplicate_email';\n  message = 'Email already registered';\n}\n\nreturn [{\n  json: {\n    success: false,\n    error: errorType,\n    message: message\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                900,
+                100
+            ],
+            "id": "error-handler",
+            "name": "Handle Error"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ $json }}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                1100,
+                100
+            ],
+            "id": "error-response",
+            "name": "Error Response"
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare Registration",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare Registration": {
+            "main": [
+                [
+                    {
+                        "node": "Insert Vendor",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Insert Vendor": {
+            "main": [
+                [
+                    {
+                        "node": "Check Duplicate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check Duplicate": {
+            "main": [
+                [
+                    {
+                        "node": "Handle Error",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Success Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Handle Error": {
+            "main": [
+                [
+                    {
+                        "node": "Error Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
