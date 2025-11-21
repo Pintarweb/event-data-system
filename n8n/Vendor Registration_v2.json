@@ -1,0 +1,391 @@
+{
+    "name": "Vendor Registration",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "/vendor-register",
+                "responseMode": "responseNode",
+                "options": {
+                    "rawBody": false
+                }
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "webhook-node",
+            "name": "Webhook"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.body.action }}",
+                            "value2": "save_certificate"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                250,
+                0
+            ],
+            "id": "check-action",
+            "name": "Check Action"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Extract form data\nconst body = $input.first().json.body;\n\nreturn [{\n  json: {\n    vendor_name: body.vendor_name,\n    business_type: body.business_type,\n    contact_person: body.contact_person,\n    designation: body.designation,\n    contact_phone: body.contact_phone,\n    email: body.email,\n    company_website: body.company_website,\n    created_at: new Date().toISOString()\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                500,
+                -100
+            ],
+            "id": "prep-registration",
+            "name": "Prepare Registration"
+        },
+        {
+            "parameters": {
+                "tableId": "vendors",
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "vendor_name",
+                            "fieldValue": "={{ $json.vendor_name }}"
+                        },
+                        {
+                            "fieldId": "business_type",
+                            "fieldValue": "={{ $json.business_type }}"
+                        },
+                        {
+                            "fieldId": "contact_person",
+                            "fieldValue": "={{ $json.contact_person }}"
+                        },
+                        {
+                            "fieldId": "designation",
+                            "fieldValue": "={{ $json.designation }}"
+                        },
+                        {
+                            "fieldId": "contact_phone",
+                            "fieldValue": "={{ $json.contact_phone }}"
+                        },
+                        {
+                            "fieldId": "email",
+                            "fieldValue": "={{ $json.email }}"
+                        },
+                        {
+                            "fieldId": "company_website",
+                            "fieldValue": "={{ $json.company_website }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                700,
+                -100
+            ],
+            "id": "insert-vendor",
+            "name": "Insert Vendor",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "Vs4fSTfqgDpewfc1",
+                    "name": "Supabase account"
+                }
+            },
+            "onError": "continueRegularOutput"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "check-duplicate-error",
+                            "leftValue": "={{ $json.error }}",
+                            "rightValue": "duplicate key",
+                            "operator": {
+                                "type": "string",
+                                "operation": "contains"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                900,
+                -100
+            ],
+            "id": "check-duplicate",
+            "name": "Check Duplicate"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"success\": true,\n  \"vendor_id\": \"{{ $json.id }}\",\n  \"message\": \"Vendor registered successfully\"\n}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                1100,
+                -200
+            ],
+            "id": "success-response",
+            "name": "Success Response"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Handle duplicate error\nconst error = $input.first().json.error;\nlet errorType = 'duplicate_unknown';\nlet message = 'Vendor already registered';\n\nif (error.includes('vendors_contact_phone_key')) {\n  errorType = 'duplicate_phone';\n  message = 'Phone number already registered';\n} else if (error.includes('vendors_email_key')) {\n  errorType = 'duplicate_email';\n  message = 'Email already registered';\n}\n\nreturn [{\n  json: {\n    success: false,\n    error: errorType,\n    message: message\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1100,
+                0
+            ],
+            "id": "error-handler",
+            "name": "Handle Error"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ $json }}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                1300,
+                0
+            ],
+            "id": "error-response",
+            "name": "Error Response"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Prepare binary data for upload\nconst body = $input.first().json.body;\nconst base64Data = body.certificate_image.split(';base64,').pop();\n\nreturn [{\n  json: {\n    vendor_id: body.vendor_id,\n    file_name: `certificate_${body.vendor_id}.png`\n  },\n  binary: {\n    data: {\n      data: base64Data,\n      mimeType: 'image/png',\n      fileName: `certificate_${body.vendor_id}.png`\n    }\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                500,
+                200
+            ],
+            "id": "prep-upload",
+            "name": "Prepare Upload"
+        },
+        {
+            "parameters": {
+                "operation": "upload",
+                "bucketName": "certificates",
+                "fileName": "={{ $json.file_name }}",
+                "binaryPropertyName": "data"
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                700,
+                200
+            ],
+            "id": "upload-cert",
+            "name": "Upload Certificate",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "Vs4fSTfqgDpewfc1",
+                    "name": "Supabase account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "tableId": "vendors",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "id",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.vendor_id }}"
+                        }
+                    ]
+                },
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "certificate_url",
+                            "fieldValue": "={{ $json.publicUrl || 'https://udueffcrqqmnsqcccixs.supabase.co/storage/v1/object/public/certificates/' + $json.file_name }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                900,
+                200
+            ],
+            "id": "update-vendor-cert",
+            "name": "Update Vendor Cert",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "Vs4fSTfqgDpewfc1",
+                    "name": "Supabase account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "{\"success\": true, \"message\": \"Certificate saved\"}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                1100,
+                200
+            ],
+            "id": "cert-success",
+            "name": "Cert Saved Response"
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Check Action",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check Action": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare Upload",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Prepare Registration",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare Registration": {
+            "main": [
+                [
+                    {
+                        "node": "Insert Vendor",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Insert Vendor": {
+            "main": [
+                [
+                    {
+                        "node": "Check Duplicate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check Duplicate": {
+            "main": [
+                [
+                    {
+                        "node": "Handle Error",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Success Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Handle Error": {
+            "main": [
+                [
+                    {
+                        "node": "Error Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare Upload": {
+            "main": [
+                [
+                    {
+                        "node": "Upload Certificate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload Certificate": {
+            "main": [
+                [
+                    {
+                        "node": "Update Vendor Cert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Vendor Cert": {
+            "main": [
+                [
+                    {
+                        "node": "Cert Saved Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

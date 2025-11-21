@@ -1,12 +1,11 @@
 -- Add missing columns to vendors table
-ALTER TABLE vendors 
-ADD COLUMN IF NOT EXISTS business_type text,
-ADD COLUMN IF NOT EXISTS contact_person text,
-ADD COLUMN IF NOT EXISTS designation text,
-ADD COLUMN IF NOT EXISTS contact_phone text,
-ADD COLUMN IF NOT EXISTS email text,
-ADD COLUMN IF NOT EXISTS company_website text,
-ADD COLUMN IF NOT EXISTS certificate_url text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS business_type text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS contact_person text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS designation text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS contact_phone text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS company_website text;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS certificate_url text;
 
 -- Add constraints safely
 DO $$
