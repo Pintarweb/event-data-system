@@ -4,406 +4,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendor Registration</title>
+    <title>Vendor Registration - Event Data System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+            --background-color: #f3f4f6;
+            --card-background: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 520px;
-            margin: 0 auto;
-            padding: 24px 18px 48px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
+            margin: 0;
+            padding: 20px;
         }
 
-        h2 {
+        .container {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
             text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1rem;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-            font-size: 14px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
         }
 
         input,
         select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
             box-sizing: border-box;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background-color: #fff;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: #25D366;
-            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        .phone-input-wrapper {
-            display: flex;
-            align-items: center;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-            transition: all 0.3s ease;
+        .field-error {
+            border-color: var(--error-color) !important;
+            background-color: #fef2f2;
         }
 
-        .phone-input-wrapper:focus-within {
-            border-color: #25D366;
-            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
-        }
-
-        .phone-prefix {
-            padding: 12px 8px 12px 12px;
-            color: #666;
-            font-size: 16px;
-            user-select: none;
-            pointer-events: none;
-            border-right: 1px solid #ddd;
-            background-color: #f5f5f5;
-            border-radius: 8px 0 0 8px;
-        }
-
-        .phone-input-wrapper input {
-            border: none;
-            border-radius: 0 8px 8px 0;
-            flex: 1;
-        }
-
-        .phone-input-wrapper input:focus {
-            border: none;
-            box-shadow: none;
-        }
-
-        .phone-input-wrapper.field-error {
-            border-color: #ff4444;
-            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+        .field-error::placeholder {
+            color: var(--error-color);
         }
 
         button {
-            background: #25D366;
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
             width: 100%;
-            font-size: 16px;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
         }
 
-        button:hover:not(:disabled) {
-            background: #128C7E;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        button:hover {
+            background-color: var(--primary-hover);
         }
 
         button:disabled {
-            background: #ccc;
+            background-color: #9ca3af;
             cursor: not-allowed;
-            transform: none;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            padding: 0.5rem;
+            background-color: #fef2f2;
+            border-radius: 4px;
+            border: 1px solid #fee2e2;
+        }
+
+        .success-message {
+            color: var(--success-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            padding: 0.5rem;
+            background-color: #ecfdf5;
+            border-radius: 4px;
+            border: 1px solid #d1fae5;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .hidden {
             display: none;
         }
 
-        .loading {
-            text-align: center;
-            color: #666;
-            margin: 20px 0;
-            font-size: 16px;
-        }
-
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 12px;
-            margin: 10px 0 18px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .error-message {
-            background: #fee;
-            border: 1px solid #fcc;
-            color: #c33;
-            padding: 12px;
-            margin: 10px 0 18px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .field-error {
-            border: 2px solid #ff4444 !important;
-            background-color: #fff9f9 !important;
-        }
-
-        .field-error:focus {
-            outline: none;
-            border-color: #ff4444 !important;
-            box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
-        }
-
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-
         /* Certificate Styles */
-        .certificate-container {
+        #certificateContainer {
             display: none;
-            /* Hidden by default */
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
-            border: 8px double #DAA520;
-            /* Golden border */
+            border: 10px solid #ddd;
+            padding: 40px;
+            background: #fff;
             position: relative;
-            overflow: hidden;
+            color: #333;
+            font-family: 'Georgia', serif;
+            margin-top: 20px;
         }
 
-        .certificate-container.show {
+        #certificateContainer.show {
             display: block;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .cert-header {
-            font-family: 'Georgia', serif;
-            color: #DAA520;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
+            color: #2563eb;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        .cert-title {
-            font-size: 32px;
-            color: #333;
-            margin-bottom: 20px;
-            font-family: 'Georgia', serif;
+        .cert-subheader {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #555;
         }
 
         .cert-body {
-            margin: 20px 0;
-            color: #555;
+            font-size: 20px;
             line-height: 1.6;
+            margin-bottom: 40px;
         }
 
-        .cert-details {
-            margin-top: 25px;
-            text-align: left;
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-
-        .cert-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ddd;
-            padding-bottom: 5px;
-        }
-
-        .cert-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .cert-label {
-            font-weight: 600;
-            color: #777;
-        }
-
-        .cert-value {
+        .cert-name {
+            font-size: 28px;
             font-weight: bold;
-            color: #333;
-            text-align: right;
+            color: #000;
+            border-bottom: 2px solid #2563eb;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin: 0 10px;
         }
 
         .cert-footer {
-            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            font-size: 16px;
+        }
+
+        .cert-seal {
+            width: 100px;
+            height: 100px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
             font-size: 14px;
-            color: #999;
-            font-style: italic;
+            text-transform: uppercase;
+            box-shadow: 0 0 0 5px #e5e7eb;
         }
 
-        .success-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 16px 14px 32px;
-            }
-
-            h2 {
-                font-size: 24px;
-            }
-
-            .cert-title {
-                font-size: 24px;
-            }
-
-            .cert-header {
-                font-size: 18px;
-            }
+        .cert-id {
+            font-size: 14px;
+            color: #888;
+            margin-top: 20px;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
-    <h2 id="pageTitle">🏢 Vendor Registration</h2>
-
-    <div id="messageContainer" style="scroll-margin-top: 20px;"></div>
-
-    <!-- Registration Form -->
-    <form id="vendorForm">
-        <div class="form-group">
-            <label for="vendorName">Vendor Name *</label>
-            <input type="text" id="vendorName" name="vendor_name" required placeholder="Enter vendor name">
-        </div>
-
-        <div class="form-group">
-            <label for="businessType">Business Type *</label>
-            <select id="businessType" name="business_type" required>
-                <option value="" disabled selected>Select business type</option>
-                <option value="Retail">Retail</option>
-                <option value="Fashion">Fashion</option>
-                <option value="F&B">F&amp;B</option>
-                <option value="Health">Health</option>
-                <option value="Technology">Technology</option>
-                <option value="Education">Education</option>
-                <option value="Professional Services">Professional Services</option>
-                <option value="Beauty">Beauty</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="contactPerson">Contact Person *</label>
-            <input type="text" id="contactPerson" name="contact_person" required
-                placeholder="Full name of contact person">
-        </div>
-
-        <div class="form-group">
-            <label for="designation">Designation *</label>
-            <select id="designation" name="designation" required>
-                <option value="" disabled selected>Select designation</option>
-                <option value="Owner">Owner</option>
-                <option value="Manager">Manager</option>
-                <option value="Senior Admin">Senior Admin</option>
-                <option value="Staff">Staff</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="contactPhone">Contact Phone *</label>
-            <div class="phone-input-wrapper" id="phoneWrapper">
-                <span class="phone-prefix">+60</span>
-                <input type="tel" id="contactPhone" name="contact_phone" required placeholder="e.g., 01-234-5678"
-                    aria-required="true">
+    <div class="container">
+        <h1 id="pageTitle">Vendor Registration</h1>
+        <form id="vendorForm">
+            <div class="form-group">
+                <label for="vendorName">Vendor Name</label>
+                <input type="text" id="vendorName" name="vendor_name" required placeholder="Enter your business name">
             </div>
-            <div class="help-text">Format: 01-234-5678 or 01-2345-6789</div>
-        </div>
 
-        <div class="form-group">
-            <label for="emailAddress">Email Address *</label>
-            <input type="email" id="emailAddress" name="email" required placeholder="contact@company.com">
-        </div>
-
-        <div class="form-group">
-            <label for="companyWebsite">Company Website</label>
-            <input type="text" id="companyWebsite" name="company_website" placeholder="example.com">
-        </div>
-
-        <button type="submit" id="submitBtn">Register Vendor</button>
-    </form>
-
-    <div id="loading" class="hidden loading">⏳ Submitting vendor details...</div>
-
-    <!-- Certificate Container -->
-    <div id="certificateContainer" class="certificate-container">
-        <div class="success-icon">✅</div>
-        <div class="cert-header">Certificate of Registration</div>
-        <div class="cert-title">Congratulations!</div>
-        <div class="cert-body">
-            <p>You have successfully registered as a vendor for the event.</p>
-            <p>We are thrilled to have you on board!</p>
-        </div>
-
-        <div class="cert-details">
-            <div class="cert-row">
-                <span class="cert-label">Vendor Name:</span>
-                <span class="cert-value" id="certVendorName"></span>
+            <div class="form-group">
+                <label for="businessType">Business Type</label>
+                <select id="businessType" name="business_type" required>
+                    <option value="">Select Business Type</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Food & Beverage">Food & Beverage</option>
+                    <option value="Services">Services</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Other">Other</option>
+                </select>
             </div>
-            <div class="cert-row">
-                <span class="cert-label">Business Type:</span>
-                <span class="cert-value" id="certBusinessType"></span>
-            </div>
-            <div class="cert-row">
-                <span class="cert-label">Contact Person:</span>
-                <span class="cert-value" id="certContactPerson"></span>
-            </div>
-            <div class="cert-row">
-                <span class="cert-label">Registration ID:</span>
-                <span class="cert-value" id="certRegId">PENDING</span>
-            </div>
-            <div class="cert-row">
-                <span class="cert-label">Date:</span>
-                <span class="cert-value" id="certDate"></span>
-            </div>
-        </div>
 
-        <div class="cert-footer">
-            <p>Please keep this for your records.</p>
-            <p>A confirmation email has been sent to <span id="certEmail"></span>.</p>
+            <div class="form-group">
+                <label for="contactPerson">Contact Person</label>
+                <input type="text" id="contactPerson" name="contact_person" required
+                    placeholder="Full name of contact person">
+            </div>
+
+            <div class="form-group">
+                <label for="designation">Designation</label>
+                <select id="designation" name="designation" required>
+                    <option value="">Select Designation</option>
+                    <option value="Owner">Owner</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Sales Representative">Sales Representative</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="phoneWrapper">
+                <label for="contactPhone">Contact Phone</label>
+                <input type="tel" id="contactPhone" name="contact_phone" required placeholder="01-234-5678">
+            </div>
+
+            <div class="form-group">
+                <label for="emailAddress">Email Address</label>
+                <input type="email" id="emailAddress" name="email" required placeholder="email@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="companyWebsite">Company Website (Optional)</label>
+                <input type="text" id="companyWebsite" name="company_website" placeholder="example.com">
+            </div>
+
+            <button type="submit" id="submitBtn">
+                <span id="loading" class="loading hidden"></span>
+                Register Vendor
+            </button>
+        </form>
+
+        <div id="messageContainer"></div>
+
+        <!-- Certificate Container -->
+        <div id="certificateContainer">
+            <div class="cert-header">Certificate of Registration</div>
+            <div class="cert-subheader">This certifies that</div>
+            <div class="cert-body">
+                <div class="cert-name" id="certVendorName">Vendor Name</div>
+                <br>has been officially registered as a<br>
+                <strong id="certBusinessType">Business Type</strong> Vendor
+            </div>
+            <div class="cert-body" style="font-size: 16px; margin-bottom: 20px;">
+                <strong>Contact:</strong> <span id="certContactPerson">Person</span><br>
+                <strong>Email:</strong> <span id="certEmail">Email</span>
+            </div>
+            <div class="cert-footer">
+                <div style="text-align: left;">
+                    <div style="border-top: 1px solid #333; padding-top: 5px; width: 150px;">Authorized Signature</div>
+                    <div style="font-size: 12px; color: #666;">Event Data System</div>
+                </div>
+                <div class="cert-seal">
+                    Official<br>Vendor
+                </div>
+                <div style="text-align: right;">
+                    <div style="border-top: 1px solid #333; padding-top: 5px; width: 150px;" id="certDate">Date</div>
+                    <div style="font-size: 12px; color: #666;">Registration Date</div>
+                </div>
+            </div>
+            <div class="cert-id">Registration ID: <span id="certRegId"></span></div>
         </div>
     </div>
 
@@ -414,10 +328,10 @@
         const submitBtn = document.getElementById('submitBtn');
         const loadingIndicator = document.getElementById('loading');
         const messageContainer = document.getElementById('messageContainer');
-        const pageTitle = document.getElementById('pageTitle');
         const certificateContainer = document.getElementById('certificateContainer');
+        const pageTitle = document.getElementById('pageTitle');
 
-        // Helper: show success message (used for simple feedback if needed, but we are using cert now)
+        // Helper: show success message
         function showSuccess(message) {
             messageContainer.innerHTML = '';
             const success = document.createElement('div');
@@ -612,263 +526,65 @@
 
             if (hasError) return;
 
-            // Normalize phone for submission
-            data.contact_phone = data.contact_phone.replace(/\D/g, '');
+            submitBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
 
-            if (data.company_website) {
-                data.company_website = data.company_website.trim();
+            try {
+                // Add https to website if needed
+                if (data.company_website && !data.company_website.startsWith('http')) {
+                    data.company_website = 'https://' + data.company_website;
+                }
 
-                const result = await response.json().catch(() => ({}));
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
 
-                if (response.ok) {
-                    if (result.success === false) {
-                        let errorMessage = result.message || 'Vendor registration failed';
+                const result = await response.json();
 
-                        if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
-                            errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
-                            handleDuplicateFields(['contact_phone']);
-                        }
-                        else if (result.error === "duplicate_email") {
-                            errorMessage = "📧 This email address is already registered. Please enter a different email address.";
-                            handleDuplicateFields(['email']);
-                        }
-                        else if (result.error === "duplicate_both") {
-                            errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
-                            handleDuplicateFields(['contact_phone', 'email']);
-                        }
-                        else if (result.error === "duplicate_name" || result.error === "duplicate_vendor_name") {
-                            errorMessage = "🏷️ This vendor name is already registered. Please enter a different vendor name.";
-                            handleDuplicateFields(['vendor_name']);
-                        }
-                        else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                            handleDuplicateFields(result.duplicate_fields);
-                        }
+                if (result.success) {
+                    showSuccess('Registration successful! Generating certificate...');
+                    form.style.display = 'none';
+                    pageTitle.style.display = 'none';
 
-                        showError(errorMessage);
-                        loadingIndicator.classList.add('hidden');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalBtnText;
-                        return;
-                    }
-
-                    // SUCCESS - Show Certificate
-                    loadingIndicator.classList.add('hidden');
-                    form.style.display = 'none'; // Hide form
-                    pageTitle.style.display = 'none'; // Hide title
-
-                    // Populate Certificate
+                    // Update certificate details
                     document.getElementById('certVendorName').textContent = data.vendor_name;
                     document.getElementById('certBusinessType').textContent = data.business_type;
                     document.getElementById('certContactPerson').textContent = data.contact_person;
                     document.getElementById('certEmail').textContent = data.email;
-                    document.getElementById('certDate').textContent = new Date().toLocaleDateString();
+                    document.getElementById('certRegId').textContent = result.id || 'PENDING';
 
-                    // If backend returns an ID, use it
-                    const vendorId = result.id || result.vendor_id;
-                    if (vendorId) {
-                        if (digitsOnly.startsWith('60')) digitsOnly = digitsOnly.substring(2);
-                        return digitsOnly.length >= 9 && digitsOnly.length <= 11;
+                    const today = new Date();
+                    document.getElementById('certDate').textContent = today.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    certificateContainer.classList.add('show');
+
+                    // Generate and upload certificate
+                    // REMOVED FOR ROLLBACK
+
+                } else {
+                    if (result.duplicate_fields) {
+                        handleDuplicateFields(result.duplicate_fields);
+                        showError(result.message || 'This vendor is already registered.');
+                    } else {
+                        showError(result.message || 'Registration failed. Please try again.');
                     }
-
-                    // Helper function to clear and highlight duplicate fields
-                    function handleDuplicateFields(duplicateFields) {
-                        form.querySelectorAll('input').forEach(input => {
-                            input.classList.remove('field-error');
-                            if (input.dataset.originalPlaceholder) {
-                                input.placeholder = input.dataset.originalPlaceholder;
-                            }
-                        });
-
-                        const phoneWrapper = document.getElementById('phoneWrapper');
-                        if (phoneWrapper) phoneWrapper.classList.remove('field-error');
-
-                        duplicateFields.forEach(fieldName => {
-                            let fieldId = '';
-                            if (fieldName === 'contact_phone' || fieldName === 'phone') fieldId = 'contactPhone';
-                            else if (fieldName === 'email') fieldId = 'emailAddress';
-                            else if (fieldName === 'vendor_name') fieldId = 'vendorName';
-
-                            const field = document.getElementById(fieldId);
-                            if (field) {
-                                if (!field.dataset.originalPlaceholder) {
-                                    field.dataset.originalPlaceholder = field.placeholder;
-                                }
-                                field.value = '';
-
-                                if (fieldId === 'contactPhone') {
-                                    const phoneWrapper = document.getElementById('phoneWrapper');
-                                    if (phoneWrapper) phoneWrapper.classList.add('field-error');
-                                    field.placeholder = '⚠️ This number is already registered. Please use a different number.';
-                                } else {
-                                    field.classList.add('field-error');
-                                    if (fieldId === 'emailAddress') {
-                                        field.placeholder = '⚠️ This email is already registered. Please use a different email.';
-                                    } else if (fieldId === 'vendorName') {
-                                        field.placeholder = '⚠️ This vendor name is already registered.';
-                                    }
-                                }
-                            }
-                        });
-
-                        if (duplicateFields.length > 0) {
-                            let firstFieldId = '';
-                            if (duplicateFields[0] === 'contact_phone' || duplicateFields[0] === 'phone') firstFieldId = 'contactPhone';
-                            else if (duplicateFields[0] === 'email') firstFieldId = 'emailAddress';
-                            else if (duplicateFields[0] === 'vendor_name') firstFieldId = 'vendorName';
-
-                            const firstField = document.getElementById(firstFieldId);
-                            if (firstField) setTimeout(() => firstField.focus(), 100);
-                        }
-                    }
-
-                    // Phone input formatting
-                    const phoneField = document.getElementById('contactPhone');
-                    const phoneWrapper = document.getElementById('phoneWrapper');
-
-                    phoneField.addEventListener('input', function (e) {
-                        const cursorPosition = e.target.selectionStart;
-                        const oldValue = e.target.value;
-                        const beforeCursor = oldValue.substring(0, cursorPosition);
-                        let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-                        const digitsOnlyBefore = beforeCursor.replace(/\D/g, '');
-                        if (digitsOnlyBefore.startsWith('60') && digitsOnlyBefore.length > 2) {
-                            digitsBeforeCursor = digitsOnlyBefore.substring(2).length;
-                        }
-
-                        const formatted = formatPhoneNumber(e.target.value);
-                        e.target.value = formatted;
-
-                        let newCursorPosition = 0;
-                        let digitCount = 0;
-                        for (let i = 0; i < formatted.length; i++) {
-                            const char = formatted[i];
-                            if (/\d/.test(char)) {
-                                digitCount++;
-                                if (digitCount === digitsBeforeCursor) {
-                                    newCursorPosition = i + 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (newCursorPosition === 0 || digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
-                            newCursorPosition = formatted.length;
-                        }
-                        e.target.setSelectionRange(newCursorPosition, newCursorPosition);
-                    });
-
-                    phoneField.addEventListener('focus', function () {
-                        phoneWrapper.classList.remove('field-error');
-                    });
-
-                    form.querySelectorAll('input, select').forEach(el => {
-                        el.addEventListener('input', () => {
-                            el.classList.remove('field-error');
-                        });
-                    });
-
-                    form.addEventListener('submit', async function (e) {
-                        e.preventDefault();
-
-                        messageContainer.innerHTML = '';
-                        form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
-                        if (phoneWrapper) phoneWrapper.classList.remove('field-error');
-
-                        const formData = new FormData(form);
-                        const data = Object.fromEntries(formData.entries());
-
-                        let hasError = false;
-
-                        if (!data.vendor_name?.trim()) {
-                            document.getElementById('vendorName').classList.add('field-error');
-                            hasError = true;
-                        }
-                        if (!data.business_type) {
-                            document.getElementById('businessType').classList.add('field-error');
-                            hasError = true;
-                        }
-                        if (!data.contact_person?.trim()) {
-                            document.getElementById('contactPerson').classList.add('field-error');
-                            hasError = true;
-                        }
-                        if (!data.designation) {
-                            document.getElementById('designation').classList.add('field-error');
-                            hasError = true;
-                        }
-                        if (!validatePhone(data.contact_phone || '')) {
-                            phoneWrapper.classList.add('field-error');
-                            showError('Please enter a valid Malaysian phone number (01-234-5678 or 01-2345-6789)');
-                            hasError = true;
-                        }
-                        if (!validateEmail(data.email || '')) {
-                            document.getElementById('emailAddress').classList.add('field-error');
-                            showError('Please enter a valid email address.');
-                            hasError = true;
-                        }
-
-                        if (hasError) return;
-
-                        // Normalize phone for submission
-                        data.contact_phone = data.contact_phone.replace(/\D/g, '');
-
-                        if (data.company_website) {
-                            data.company_website = data.company_website.trim();
-
-                            const result = await response.json().catch(() => ({}));
-
-                            if (response.ok) {
-                                if (result.success === false) {
-                                    let errorMessage = result.message || 'Vendor registration failed';
-
-                                    if (result.error === "duplicate_phone" || result.error === "duplicate_contact_phone") {
-                                        errorMessage = "📱 This phone number is already registered. Please enter a different phone number.";
-                                        handleDuplicateFields(['contact_phone']);
-                                    }
-                                    else if (result.error === "duplicate_email") {
-                                        errorMessage = "📧 This email address is already registered. Please enter a different email address.";
-                                        handleDuplicateFields(['email']);
-                                    }
-                                    else if (result.error === "duplicate_both") {
-                                        errorMessage = "📱📧 Both phone number and email are already registered. Please enter different contact information.";
-                                        handleDuplicateFields(['contact_phone', 'email']);
-                                    }
-                                    else if (result.error === "duplicate_name" || result.error === "duplicate_vendor_name") {
-                                        errorMessage = "🏷️ This vendor name is already registered. Please enter a different vendor name.";
-                                        handleDuplicateFields(['vendor_name']);
-                                    }
-                                    else if (result.duplicate_fields && result.duplicate_fields.length > 0) {
-                                        handleDuplicateFields(result.duplicate_fields);
-                                    }
-
-                                    showError(errorMessage);
-                                    loadingIndicator.classList.add('hidden');
-                                    submitBtn.disabled = false;
-                                    submitBtn.textContent = originalBtnText;
-                                    return;
-                                }
-
-                                // SUCCESS - Show Certificate
-                                loadingIndicator.classList.add('hidden');
-                                form.style.display = 'none'; // Hide form
-                                pageTitle.style.display = 'none'; // Hide title
-
-                                // Populate Certificate
-                                document.getElementById('certVendorName').textContent = data.vendor_name;
-                                document.getElementById('certBusinessType').textContent = data.business_type;
-                                document.getElementById('certContactPerson').textContent = data.contact_person;
-                                document.getElementById('certEmail').textContent = data.email;
-                                document.getElementById('certDate').textContent = new Date().toLocaleDateString();
-
-                                // If backend returns an ID, use it
-                                const vendorId = result.id || result.vendor_id;
-                                if (vendorId) {
-                                    document.getElementById('certRegId').textContent = vendorId;
-                                } else {
-                                    document.getElementById('certRegId').textContent = 'V-' + Math.floor(1000 + Math.random() * 9000);
-                                }
-
-                                certificateContainer.classList.add('show');
-
-        // Certificate generation/upload removed as per user request.
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred. Please check your connection and try again.');
+            } finally {
+                submitBtn.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 
